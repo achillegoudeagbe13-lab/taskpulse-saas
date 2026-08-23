@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireOrgAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireOrgAdmin } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 const schema = z.object({ organizationName: z.string().trim().min(1).max(120), logoUrl: z.string().max(500).optional() });
 
