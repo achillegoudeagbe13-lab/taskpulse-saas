@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { requireOrgAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireOrgAdmin } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 function range(value: string | null) {
   const end = new Date();
