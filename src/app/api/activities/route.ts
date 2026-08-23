@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireOrgMember } from '@/lib/auth';
-import { writeAudit } from '@/lib/audit';
-import { prisma } from '@/lib/prisma';
+import { requireOrgMember } from '../../../lib/auth';
+import { writeAudit } from '../../../lib/audit';
+import { prisma } from '../../../lib/prisma';
 
 const activitySchema = z.object({ title: z.string().trim().min(1).max(160), content: z.string().trim().min(1).max(4000), status: z.enum(['TERMINE', 'EN_COURS', 'BLOQUE']), attachmentUrl: z.string().url().optional().or(z.literal('')) });
 const activityPatch = z.object({ id: z.string().min(1), title: z.string().trim().min(1).max(160).optional(), content: z.string().trim().min(1).max(4000).optional(), status: z.enum(['TERMINE', 'EN_COURS', 'BLOQUE']).optional() });
