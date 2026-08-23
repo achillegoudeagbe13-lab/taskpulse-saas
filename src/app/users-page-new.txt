@@ -1,0 +1,145 @@
+type MemberRow = {
+  membershipId: string;
+  role: OrgRoleName;
+  joinedAt: string;
+  user: { id: string; firstName: string; lastName: string; username: string; email: string; phone?: string | null; status?: string; department: string; photoUrl?: string | null; createdAt?: string };
+};
+
+function UsersPage({ onNavigate }: { onNavigate: (page: string) => void }) {
+  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [messageTarget, setMessageTarget] = useState<MemberRow | null>(null);
+  const [messageError, setMessageError] = useState('');
+
+  async function load() {
+    setError('');
+    try {
+      const response = await fetch('/api/admin/users');
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      setMembers(result.members);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Impossible de charger les membres.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  /** Rôle dans l'organisation (ORGANIZATION_ADMIN / EMPLOYEE / INTERN). */
+  async function changeRole(member: MemberRow, role: string) {
+    setError(''); setNotice('');
+    const response = await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: member.user.id, role }) });
+    const result = await response.json();
+    if (!response.ok) { setError(result.error); return; }
+    setNotice(`${member.user.firstName} ${member.user.lastName} est maintenant ${roleLabels[role] ?? role}.`);
+    load();
+  }
+
+  /** Suspension / réactivation du compte utilisateur. */
+  async function toggleStatus(member: MemberRow) {
+    setError(''); setNotice('');
+    const status = member.user.status === 'ACTIF' ? 'SUSPENDU' : 'ACTIF';
+    const response = await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: member.user.id, status }) });
+    const result = await response.json();
+    if (!response.ok) { setError(result.error); return; }
+    setNotice(status === 'ACTIF' ? 'Compte réactivé.' : 'Compte suspendu.');
+    load();
+  }
+
+  /** Retire le membre de l'organisation sans supprimer son compte. */
+  async function removeFromOrg(member: MemberRow) {
+    if (!window.confirm(`Retirer ${member.user.firstName} ${member.user.lastName} de l'organisation ? Son compte sera conservé.`)) return;
+    setError(''); setNotice('');
+    const response = await fetch(`/api/admin/users?id=${member.user.id}`, { method: 'DELETE' });
+    const result = await response.json();
+    if (!response.ok) { setError(result.error); return; }
+    setNotice('Membre retiré de l’organisation.');
+    load();
+  }
+
+  /** Message / notification directe à un membre (POST /api/messages). */
+  async function sendDirectMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!messageTarget) return;
+    setMessageError('');
+    const data = Object.fromEntries(new FormData(event.currentTarget));
+    const response = await fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recipientId: messageTarget.user.id, content: data.content }) });
+    const result = await response.json();
+    if (!response.ok) { setMessageError(result.error); return; }
+    const target = messageTarget;
+    setMessageTarget(null);
+    setNotice(`Message direct envoyé à ${target.user.firstName} ${target.user.lastName}.`);
+  }
+
+  const filteredMembers = members.filter((member) => `${member.user.firstName} ${member.user.lastName} ${member.user.username} ${member.user.email}`.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="section-page">
+      <div className="page-heading">
+        <div><p className="eyebrow">ADMINISTRATION</p><h1>Utilisateurs</h1><p className="muted">Membres de votre organisation : rôles, statuts et invitations.</p></div>
+        <button className="primary-button" onClick={() => onNavigate('Invitations')}><Send size={16} /> Inviter un membre</button>
+      </div>
+      {notice && <div className="notice success">{notice}</div>}
+      {error && <div className="notice error">{error}<button className="link-button" onClick={load}>Réessayer</button></div>}
+      {loading ? (
+        <div className="loading-state"><span className="spinner" /> Chargement des membres…</div>
+      ) : (
+        <section className="panel users-panel">
+          <div className="table-toolbar"><strong>{members.length} membres</strong><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher un membre…" /></div>
+          {filteredMembers.length === 0 ? (
+            <div className="empty-state"><Users size={24} /><h3>Aucun membre</h3><p className="muted">Invitez votre premier employé ou stagiaire.</p></div>
+          ) : (
+            <div className="users-table-wrap">
+              <table>
+                <thead><tr><th>Membre</th><th>Rôle</th><th>Département</th><th>Statut</th><th>Arrivée</th><th>Actions</th></tr></thead>
+                <tbody>{filteredMembers.map((member) => (
+                  <tr key={member.membershipId}>
+                    <td><div className="user-cell"><span className="avatar">{member.user.firstName[0]}{member.user.lastName[0]}</span><span><strong>{member.user.firstName} {member.user.lastName}</strong><small>@{member.user.username} · {member.user.email}</small></span></div></td>
+                    <td>
+                      <select value={member.role} onChange={(event) => changeRole(member, event.target.value)} aria-label="Rôle dans l'organisation">
+                        <option value="ORGANIZATION_ADMIN">Administrateur</option>
+                        <option value="EMPLOYEE">Employé</option>
+                        <option value="INTERN">Stagiaire</option>
+                      </select>
+                    </td>
+                    <td>{member.user.department || '—'}</td>
+                    <td><span className={`status-badge ${member.user.status === 'ACTIF' ? 'active' : ''}`}>{member.user.status === 'ACTIF' ? 'Actif' : member.user.status === 'SUSPENDU' ? 'Suspendu' : 'Inactif'}</span></td>
+                    <td>{new Date(member.joinedAt).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button className="icon-button" title={`Message direct à ${member.user.firstName}`} onClick={() => { setMessageTarget(member); setMessageError(''); }}><MessageSquare size={15} /></button>
+                        <button className="icon-button" title={member.user.status === 'ACTIF' ? 'Suspendre le compte' : 'Réactiver le compte'} onClick={() => toggleStatus(member)}><Settings size={15} /></button>
+                        <button className="icon-button" title="Retirer de l'organisation" onClick={() => removeFromOrg(member)}><Trash2 size={15} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+      {messageTarget && (
+      <div className="modal-backdrop" onClick={() => setMessageTarget(null)}>
+        <form className="modal panel" onSubmit={sendDirectMessage} onClick={(event) => event.stopPropagation()}>
+          <button className="modal-close" type="button" onClick={() => setMessageTarget(null)}>×</button>
+          <p className="eyebrow">MESSAGERIE DIRECTE</p>
+          <h2>Message à {messageTarget.user.firstName} {messageTarget.user.lastName}</h2>
+          <p className="muted">@{messageTarget.user.username} · {messageTarget.user.email}</p>
+          <label>Message<textarea name="content" required maxLength={5000} placeholder="Votre message direct…" /></label>
+          {messageError && <div className="notice error">{messageError}</div>}
+          <div className="modal-actions">
+            <button className="outline-button" type="button" onClick={() => setMessageTarget(null)}>Annuler</button>
+            <button className="primary-button" type="submit"><Send size={16} /> Envoyer</button>
+          </div>
+        </form>
+      </div>
+    )}
+    </div>
+  );
+}

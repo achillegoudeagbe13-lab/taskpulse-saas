@@ -1,0 +1,442 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EMPLOYE
+  STAGIAIRE
+}
+
+enum UserStatus {
+  ACTIF
+  INACTIF
+  SUSPENDU
+}
+
+enum TaskStatus {
+  TERMINE
+  EN_COURS
+  BLOQUE
+  EN_ATTENTE
+}
+
+enum TaskPriority {
+  BASSE
+  MOYENNE
+  HAUTE
+}
+
+enum ActivityStatus {
+  TERMINE
+  EN_COURS
+  BLOQUE
+}
+
+enum JournalEntryStatus {
+  BROUILLON
+  ENREGISTREE
+  VALIDEE
+  MODIFICATION_DEMANDEE
+  EN_ATTENTE_VALIDATION
+}
+
+enum PlatformRole {
+  USER
+  PLATFORM_SUPER_ADMIN
+}
+
+enum OrgRole {
+  ORGANIZATION_ADMIN
+  EMPLOYEE
+  INTERN
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+model RoleDefinition {
+  id          String   @id @default(cuid())
+  name        Role    @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+}
+
+model Department {
+  id             String        @id @default(cuid())
+  name           String
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  users          User[]
+  tasks          Task[]
+  createdAt      DateTime      @default(now())
+
+  @@unique([organizationId, name])
+}
+
+model SystemSetting {
+  id             String        @id @default(cuid())
+  key            String
+  value          String
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([organizationId, key])
+}
+
+model Organization {
+  id            String             @id @default(cuid())
+  name          String
+  slug          String             @unique
+  sector        String?
+  country       String?
+  contactEmail  String?
+  phone         String?
+  status        OrganizationStatus @default(ACTIVE)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  memberships    Membership[]
+  invitations    Invitation[]
+  departments    Department[]
+  settings       SystemSetting[]
+  tasks          Task[]
+  activities     Activity[]
+  announcements  Announcement[]
+  messages       Message[]
+  notifications  Notification[]
+  attendances    Attendance[]
+  journalEntries JournalEntry[]
+  journalCategories JournalCategory[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  role           OrgRole      @default(EMPLOYEE)
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  token          String           @unique
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  email          String?
+  firstName      String?
+  lastName       String?
+  role           OrgRole          @default(EMPLOYEE)
+  status         InvitationStatus @default(PENDING)
+  invitedBy      User             @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([organizationId, status])
+}
+
+model User {
+  id             String         @id @default(cuid())
+  firstName      String
+  lastName       String
+  username       String         @unique
+  email          String         @unique
+  phone          String?
+  passwordHash   String
+  photoUrl       String?
+  // @deprecated Rôle global historique — conservé pour compatibilité ; les rôles effectifs
+  // vivent désormais dans Membership.role (ORGANIZATION_ADMIN / EMPLOYEE / INTERN).
+  role           Role           @default(EMPLOYE)
+  status         UserStatus     @default(ACTIF)
+  roleDefinition RoleDefinition? @relation(fields: [roleId], references: [id])
+  roleId         String?
+  department     Department?    @relation(fields: [departmentId], references: [id])
+  departmentId   String?
+  lastLoginAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  profile        Profile?
+  sessions       Session[]
+  tasks          Task[]         @relation("TaskAssignee")
+  createdTasks   Task[]         @relation("TaskCreator")
+  taskComments   TaskComment[]
+  attendances    Attendance[]
+  activities     Activity[]
+  announcements  Announcement[]
+  announcementComments AnnouncementComment[]
+  announcementReactions AnnouncementReaction[]
+  sentMessages   Message[]      @relation("MessageSender")
+  receivedMessages Message[]    @relation("MessageRecipient")
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+  workJournal    WorkJournal?
+  journalComments JournalComment[]
+  journalReports JournalReport[]
+
+  platformRole         PlatformRole @default(USER)
+  activeOrganizationId String?
+  memberships          Membership[]
+  sentInvitations      Invitation[]
+}
+
+model WorkJournal {
+  id          String          @id @default(cuid())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String          @unique
+  entries     JournalEntry[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model JournalCategory {
+  id             String        @id @default(cuid())
+  name           String
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  entries        JournalEntry[]
+  createdAt      DateTime       @default(now())
+
+  @@unique([organizationId, name])
+}
+
+model JournalEntry {
+  id              String            @id @default(cuid())
+  journal         WorkJournal       @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId       String
+  organization    Organization?     @relation(fields: [organizationId], references: [id])
+  organizationId  String?
+  category        JournalCategory   @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  task            Task?             @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  taskId          String?
+  activity        Activity?         @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  activityId      String?
+  entryDate       DateTime
+  title           String
+  summary         String
+  workItems       String
+  timeMinutes     Int               @default(0)
+  difficulties    String?
+  solutions       String?
+  skills          String?
+  result          String?
+  personalComment String?
+  status          JournalEntryStatus @default(BROUILLON)
+  attachments     JournalAttachment[]
+  comments        JournalComment[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([journalId, entryDate])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model JournalAttachment {
+  id        String       @id @default(cuid())
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId   String
+  name      String
+  url       String
+  mimeType  String?
+  createdAt DateTime     @default(now())
+}
+
+model JournalComment {
+  id        String       @id @default(cuid())
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId   String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  content   String
+  createdAt DateTime     @default(now())
+}
+
+model JournalReport {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  type        String
+  startDate   DateTime
+  endDate     DateTime
+  title       String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  position  String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Task {
+  id           String       @id @default(cuid())
+  title        String
+  description  String?
+  project      String?
+  status       TaskStatus   @default(EN_ATTENTE)
+  priority     TaskPriority @default(MOYENNE)
+  progress     Int          @default(0)
+  dueDate      DateTime?
+  assignee     User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId   String?
+  creator      User         @relation("TaskCreator", fields: [creatorId], references: [id])
+  creatorId    String
+  department     Department?   @relation(fields: [departmentId], references: [id])
+  departmentId   String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  createdAt      DateTime      @default(now())
+  updatedAt    DateTime     @updatedAt
+  comments     TaskComment[]
+  journalEntries JournalEntry[]
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  content   String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  clockIn   DateTime
+  clockOut  DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  status    ActivityStatus @default(EN_COURS)
+  attachmentUrl String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  createdAt DateTime @default(now())
+  journalEntries JournalEntry[]
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comments  AnnouncementComment[]
+  reactions AnnouncementReaction[]
+}
+
+model AnnouncementComment {
+  id             String       @id @default(cuid())
+  content        String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  announcementId String
+  author         User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId       String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model AnnouncementReaction {
+  id             String       @id @default(cuid())
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  announcementId String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  createdAt      DateTime     @default(now())
+
+  @@unique([announcementId, userId])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId    String
+  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  title     String
+  content   String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    String?
+  organizationId String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}

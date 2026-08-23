@@ -1,0 +1,9 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { requireOrgMember } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+const schema = z.object({ title: z.string().trim().min(1).max(160), content: z.string().trim().min(1).max(5000) });
+
+export async function GET() { const auth = await requireOrgMember(); if (auth.error) return auth.error; const announcements = await prisma.announcement.findMany({ where: { organizationId: auth.ctx.organizationId }, include: { author: { select: { firstName: true, lastName: true, photoUrl: true } }, comments: { include: { author: { select: { firstName: true, lastName: true, photoUrl: true } } }, orderBy: { createdAt: 'asc' } }, _count: { select: { reactions: true } } }, orderBy: { createdAt: 'desc' } }); return NextResponse.json({ announcements }); }
+export async function POST(request: Request) { const auth = await requireOrgMember(); if (auth.error) return auth.error; if (auth.ctx.orgRole !== 'ORGANIZATION_ADMIN') return NextResponse.json({ error: 'Seul un administrateur peut publier une annonce.' }, { status: 403 }); try { const input = schema.parse(await request.json()); const announcement = await prisma.announcement.create({ data: { ...input, authorId: auth.ctx.user.id, organizationId: auth.ctx.organizationId } }); const members = await prisma.membership.findMany({ where: { organizationId: auth.ctx.organizationId, userId: { not: auth.ctx.user.id }, user: { status: 'ACTIF' } }, select: { userId: true } }); if (members.length) await prisma.notification.createMany({ data: members.map((member) => ({ userId: member.userId, organizationId: auth.ctx.organizationId, title: 'Nouvelle annonce', content: input.title })) }); return NextResponse.json({ announcement }, { status: 201 }); } catch { return NextResponse.json({ error: 'Annonce invalide.' }, { status: 400 }); } }
