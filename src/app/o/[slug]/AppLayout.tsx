@@ -2,19 +2,19 @@
 
 import { useState } from 'react';
 import Dashboard from './Dashboard';
-import WorkJournalPanel from '@/app/work-journal-panel';
-import ActivitiesPanel from '@/app/activities-panel';
-import AnnouncementsPanel from '@/app/announcements-panel';
-import MessagesPanel from '@/app/messages-panel';
-import HistoryPanel from '@/app/history-panel';
-import AdminOverview from '@/app/admin-overview';
-import InvitationsPanel from '@/app/invitations-panel';
+import WorkJournalPanel from '../../work-journal-panel';
+import ActivitiesPanel from '../../activities-panel';
+import AnnouncementsPanel from '../../announcements-panel';
+import MessagesPanel from '../../messages-panel';
+import HistoryPanel from '../../history-panel';
+import AdminOverview from '../../admin-overview';
+import InvitationsPanel from '../../invitations-panel';
 import UsersPage from './users/page';
 
 import {
-  LayoutDashboard, MessageSquare, Bell, Activity, BookOpen,
-  Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut,
-} from '@/app/ui-icons';
+  LayoutDashboard, MessagesSquare, Bell, Activity, BookOpen,
+  Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut
+} from '../../ui-icons';
 
 type User = {
   id: string;
