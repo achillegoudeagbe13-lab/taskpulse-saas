@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireOrgMember } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 const actionSchema = z.object({ action: z.enum(['COMMENT', 'VALIDATE', 'REQUEST_CHANGE', 'SUBMIT']), entryId: z.string().min(1), content: z.string().trim().max(3000).optional() });
 

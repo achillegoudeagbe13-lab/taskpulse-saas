@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireOrgAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { writeAudit } from '@/lib/audit';
+import { requireOrgAdmin } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+import { writeAudit } from '../../../../lib/audit';
 
 /** Membres de l'organisation active uniquement. */
 export async function GET() {

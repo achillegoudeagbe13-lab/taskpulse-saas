@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { createSession, publicUser, syncPlatformRole } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { writeAudit } from '@/lib/audit';
+import { createSession, publicUser, syncPlatformRole } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+import { writeAudit } from '../../../../lib/audit';
 
 const loginSchema = z.object({ identifier: z.string().trim().min(1), password: z.string().min(1) });
 

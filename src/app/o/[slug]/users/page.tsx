@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MessageSquare, Settings, Trash2, Users, Send } from '@/app/ui-icons';
+import { Search, MessageSquare, Settings, Trash2, Users, Send } from '../../../ui-icons';
 
 type MemberRow = {
   membershipId: string;

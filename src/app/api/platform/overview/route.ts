@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { requirePlatformSuperAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requirePlatformSuperAdmin } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 /**
  * Tableau de bord plateforme : métriques agrégées et métadonnées d'organisations

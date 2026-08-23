@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getCurrentUser, requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { getCurrentUser, requireOrgMember } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
 
 const entrySchema = z.object({
   id: z.string().optional(),

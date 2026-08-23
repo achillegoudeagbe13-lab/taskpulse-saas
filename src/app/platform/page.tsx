@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { ShieldCheck, BarChart3, Users, Building2 } from '@/app/ui-icons';
+import { ShieldCheck, BarChart3, Users, Building2 } from '../ui-icons';
 type Organization = {
   id: string; name: string; slug: string;
   sector: string | null; country: string | null;

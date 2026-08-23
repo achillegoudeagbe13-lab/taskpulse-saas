@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { isMemberOf, requireOrgAdmin, requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { isMemberOf, requireOrgAdmin, requireOrgMember } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
 
 const taskSchema = z.object({ title: z.string().trim().min(1).max(160), description: z.string().max(4000).optional(), assigneeId: z.string().optional(), dueDate: z.string().optional(), priority: z.enum(['BASSE', 'MOYENNE', 'HAUTE']).default('MOYENNE'), status: z.enum(['TERMINE', 'EN_COURS', 'BLOQUE', 'EN_ATTENTE']).default('EN_ATTENTE'), progress: z.coerce.number().int().min(0).max(100).default(0) });
 

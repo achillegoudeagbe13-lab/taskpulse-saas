@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { isMemberOf, requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { isMemberOf, requireOrgMember } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
 
 export async function GET(request: Request) {
   const auth = await requireOrgMember();

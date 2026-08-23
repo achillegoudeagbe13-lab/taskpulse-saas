@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getCurrentUser, publicUser } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { writeAudit } from '@/lib/audit';
+import { getCurrentUser, publicUser } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+import { writeAudit } from '../../../lib/audit';
 
 const profileSchema = z.object({
   firstName: z.string().trim().min(1).max(80),

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireOrgMember } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
 
 export async function GET() {
   const auth = await requireOrgMember();

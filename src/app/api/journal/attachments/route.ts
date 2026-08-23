@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import { requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireOrgMember } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
 const maxBytes = 5 * 1024 * 1024;

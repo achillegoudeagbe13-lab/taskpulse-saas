@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { createSession, publicUser } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { writeAudit } from '@/lib/audit';
+import { createSession, publicUser } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+import { writeAudit } from '../../../../lib/audit';
 
 /**
  * Création d'une organisation + du compte responsable.

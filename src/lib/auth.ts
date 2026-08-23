@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { OrgRole, PlatformRole } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
+import { prisma } from './prisma';
 
 export const SESSION_COOKIE = 'taskpulse-session';
 const SESSION_DAYS = 30;

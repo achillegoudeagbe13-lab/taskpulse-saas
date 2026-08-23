@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireOrgMember } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 function escapeHtml(value: unknown) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] ?? char)); }
 function roleLabel(role: string) { return role === 'ORGANIZATION_ADMIN' ? 'Administrateur' : role === 'INTERN' ? 'Stagiaire' : 'Employé'; }

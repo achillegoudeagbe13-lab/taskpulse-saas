@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BarChart3, Clock3, CheckCircle2, Send } from '@/app/ui-icons';
+import { BarChart3, Clock3, CheckCircle2, Send } from '../../ui-icons';
 
 type DashboardData = {
   stats: {

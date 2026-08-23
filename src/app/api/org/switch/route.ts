@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { publicUser, requireAuth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { writeAudit } from '@/lib/audit';
+import { publicUser, requireAuth } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+import { writeAudit } from '../../../../lib/audit';
 
 /** Change l'organisation active de l'utilisateur (parmi ses memberships uniquement). */
 export async function POST(request: Request) {

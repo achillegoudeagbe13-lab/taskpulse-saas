@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireOrgMember } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 const inputSchema = z.object({ startDate: z.string(), endDate: z.string(), type: z.string().min(1) });
 

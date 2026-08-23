@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
-import { requireOrgAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { writeAudit } from '@/lib/audit';
+import { requireOrgAdmin } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+import { writeAudit } from '../../../lib/audit';
 
 const INVITE_DAYS = 7;
 

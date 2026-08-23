@@ -4,7 +4,7 @@
  * Vérifie que le slug correspond à l'organisation active.
  * Puis rend le layout client <AppLayout />.
  */
-import { requireOrgMember } from '@/lib/auth';
+import { requireOrgMember } from '../../../lib/auth';
 import { redirect } from 'next/navigation';
 import AppLayout from './AppLayout';
 

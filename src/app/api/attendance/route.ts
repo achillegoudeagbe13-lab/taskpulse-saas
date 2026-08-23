@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { requireAuth, requireOrgMember } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { requireAuth, requireOrgMember } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
 
 function dayStart() { const date = new Date(); date.setHours(0, 0, 0, 0); return date; }
 export async function GET() {
