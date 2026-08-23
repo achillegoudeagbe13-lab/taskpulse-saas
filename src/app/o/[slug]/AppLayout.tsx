@@ -12,7 +12,7 @@ import InvitationsPanel from '../../invitations-panel';
 import UsersPage from './users/page';
 
 import {
-  LayoutDashboard, MessagesSquare, Bell, Activity, BookOpen,
+  LayoutDashboard, MessageSquare, Bell, Activity, BookOpen,
   Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut
 } from '../../ui-icons';
 
