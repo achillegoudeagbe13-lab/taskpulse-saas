@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --save-dev @types/node && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -15,6 +15,7 @@
   "dependencies": {
     "@prisma/client": "^6.16.2",
     "@types/react-dom": "^19.2.4",
+    "@types/react": "^19.2.18",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.9",
     "next": "14.2.15",
@@ -26,11 +27,8 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^26.2.0",
-    "@types/react": "^19.2.18",
     "prisma": "^6.16.2",
-    "tsx": "^4.23.12",
-    "typescript": "^6.0.3"
+    "tsx": "^4.23.12"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
