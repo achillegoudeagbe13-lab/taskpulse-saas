@@ -38,8 +38,10 @@ export default function LoginPage() {
     if (!res.ok) {
       setError(json.error || 'Erreur de connexion.');
     } else {
-      const slug = json.organization?.slug;
-      if (json.isPlatformSuperAdmin) router.push('/platform');
+      // La réponse est { user: publicUser(...) } — on lit donc sur json.user.
+      const user = json?.user ?? json;
+      const slug = user?.organization?.slug ?? json.organization?.slug;
+      if (user?.platformRole === 'PLATFORM_SUPER_ADMIN' || json.isPlatformSuperAdmin) router.push('/platform');
       else if (slug) router.push('/o/' + slug);
       else router.push('/');
     }

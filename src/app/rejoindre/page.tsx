@@ -35,12 +35,17 @@ function JoinForm() {
   }
 
   if (done) {
+    const slug = preview?.organization?.slug;
     return (
       <>
         <p className="eyebrow">BIENVENUE</p>
         <h2>Vous avez rejoint {preview?.organization.name}.</h2>
         <p className="muted">Votre compte est actif avec le rôle {preview?.role === 'INTERN' ? 'Stagiaire' : 'Employé'}.</p>
-        <Link className="primary-button" href="/">Accéder à mon espace <ChevronRight size={17} /></Link>
+        {slug ? (
+          <Link className="primary-button" href={`/o/${slug}`}>Accéder à mon espace <ChevronRight size={17} /></Link>
+        ) : (
+          <Link className="primary-button" href="/">Accéder à mon espace <ChevronRight size={17} /></Link>
+        )}
       </>
     );
   }
