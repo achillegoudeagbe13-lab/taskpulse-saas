@@ -46,4 +46,5 @@ export const Users = (props: IconProps) => <Icon {...props}><circle cx="9" cy="8
 export const X = (props: IconProps) => <Icon {...props}><path d="m6 6 12 12M18 6 6 18" /></Icon>;
 export const Zap = (props: IconProps) => <Icon {...props}><path d="m13 2-9 12h7l-1 8 9-12h-7z" /></Icon>;
 export const ArrowLeft = (props: IconProps) => <Icon {...props}><path d="M19 12H5M12 19l-7-7 7-7" /></Icon>;
+export const Ban = (props: IconProps) => <Icon {...props}><circle cx="12" cy="12" r="9" /><path d="m5.6 5.6 12.8 12.8" /></Icon>;
 export const Building2 = (props: IconProps) => <Icon {...props}><rect x="4" y="3" width="10" height="18" rx="1" /><path d="M14 8h5a1 1 0 0 1 1 1v12H4M7 7h.01M11 7h.01M7 11h.01M11 11h.01M7 15h.01M11 15h.01M17 12h.01M17 16h.01" /></Icon>;

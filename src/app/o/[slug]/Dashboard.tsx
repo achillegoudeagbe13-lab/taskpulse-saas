@@ -56,30 +56,30 @@ export default function Dashboard({ ctx }: { ctx: any }) {
 
       {/* Carte Annonce de l'équipe */}
       {data.latestAnnouncement && (
-        <section className="mb-6">
-          <a href="/o/[slug]/annonces" className="block p-4 bg-white rounded-xl shadow hover:shadow-md transition">
-            <h2 className="font-bold mb-2 text-blue-800">📢 Annonce de l'équipe</h2>
-            <h3 className="font-semibold mb-1">{data.latestAnnouncement.title}</h3>
-            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{data.latestAnnouncement.content}</p>
-            <p className="text-xs text-gray-500">Par {data.latestAnnouncement.author}</p>
+        <section className="dash-section">
+          <a href="#" className="dash-announce" onClick={(e) => e.preventDefault()}>
+            <p className="eyebrow">📢 ANNONCE DE L’ÉQUIPE</p>
+            <h3>{data.latestAnnouncement.title}</h3>
+            <p>{data.latestAnnouncement.content}</p>
+            <p style={{ marginBottom: 0 }}>Par {data.latestAnnouncement.author}</p>
           </a>
         </section>
       )}
 
       {/* Tâches de la semaine */}
       {data.weekTasks && data.weekTasks.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Tâches de la semaine</h2>
-          <ul className="space-y-2">
+        <section className="dash-section">
+          <h2>Tâches de la semaine</h2>
+          <ul className="dash-list">
             {data.weekTasks.map((t) => (
-              <li key={t.id} className="p-3 bg-white rounded-lg border flex justify-between">
+              <li key={t.id}>
                 <span>{t.title}</span>
-                <span className={'text-xs px-2 py-1 rounded ' + (
-                  t.status === 'TERMINE' ? 'bg-green-100 text-green-800' :
-                  t.status === 'EN_COURS' ? 'bg-blue-100 text-blue-800' :
-                  'bg-gray-100 text-gray-600'
+                <span className={'status-badge ' + (
+                  t.status === 'TERMINE' ? 'termine' :
+                  t.status === 'EN_COURS' ? 'en_cours' :
+                  t.status === 'BLOQUE' ? 'bloque' : 'en_attente'
                 )}>
-                  {t.status}
+                  {t.status === 'TERMINE' ? 'Terminée' : t.status === 'EN_COURS' ? 'En cours' : t.status === 'BLOQUE' ? 'Bloquée' : 'En attente'}
                 </span>
               </li>
             ))}
@@ -89,14 +89,14 @@ export default function Dashboard({ ctx }: { ctx: any }) {
 
       {/* Graphique par jour */}
       {data.byDay && data.byDay.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Activité par jour</h2>
-          <div className="grid grid-cols-7 gap-2 text-center">
+        <section className="dash-section">
+          <h2>Activité par jour</h2>
+          <div className="chart-mini">
             {data.byDay.map((d) => (
-              <div key={d.label} className="p-2 bg-white rounded-lg shadow">
-                <div className="text-xs text-gray-500">{d.label}</div>
-                <div className="text-lg font-bold">{d.tasks}</div>
-                <div className="text-xs text-gray-400">{d.activities} activités</div>
+              <div key={d.label} className="cell">
+                <small>{d.label}</small>
+                <strong>{d.tasks}</strong>
+                <em>{d.activities} act.</em>
               </div>
             ))}
           </div>
@@ -108,12 +108,10 @@ export default function Dashboard({ ctx }: { ctx: any }) {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
-    <div className="bg-white p-4 rounded-xl shadow flex items-center gap-4">
-      <div className="bg-blue-50 p-2 rounded-lg">{icon}</div>
-      <div>
-        <div className="text-2xl font-bold">{value}</div>
-        <div className="text-sm text-gray-600">{label}</div>
-      </div>
+    <div className="plat-stat">
+      <span className="plat-stat-icon">{icon}</span>
+      <strong>{value}</strong>
+      <span>{label}</span>
     </div>
   );
 }
