@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { requireOrgMember } from '../../../lib/auth';
-import { prisma } from '../../../lib/prisma';
+import { requireOrgMember } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
 /** Identité visuelle de l'organisation active (accessible à tous les membres). */
 export async function GET() {
