@@ -11,12 +11,18 @@ import AdminOverview from '../../admin-overview';
 import InvitationsPanel from '../../invitations-panel';
 import AttendancePanel from '../../attendance-panel';
 import NotificationsPanel from '../../notifications-panel';
+import TasksPanel from '../../tasks-panel';
+import ProfilePanel from '../../profile-panel';
+import ReportsPanel from '../../reports-panel';
+import AdminAttendancePanel from '../../admin-attendance-panel';
+import OrgSettingsPanel from '../../org-settings-panel';
 import UsersPage from './users/page';
 import NotificationBell from '../../notification-bell';
 
 import {
   LayoutDashboard, MessageSquare, Bell, Activity, BookOpen,
-  Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut, Menu, X
+  Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut, Menu, X,
+  KanbanSquare, UserRound, BarChart3, Building2,
 } from '../../ui-icons';
 
 type User = {
@@ -39,16 +45,21 @@ type User = {
 
 const MEMBER_TABS = [
   { id: 'Dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+  { id: 'Tâches', label: 'Tâches', icon: KanbanSquare },
   { id: 'Pointage', label: 'Pointage', icon: Clock3 },
   { id: 'Messages', label: 'Messages', icon: MessageSquare },
   { id: 'Annonces', label: 'Annonces', icon: Bell },
   { id: 'Activités', label: 'Activités', icon: Activity },
   { id: 'Journal de travail', label: 'Journal de travail', icon: BookOpen },
   { id: 'Historique', label: 'Historique', icon: Clock3 },
+  { id: 'Profil', label: 'Profil', icon: UserRound },
 ];
 
 const ADMIN_TABS = [
   ...MEMBER_TABS,
+  { id: 'Rapports', label: 'Rapports', icon: BarChart3 },
+  { id: 'Pointages', label: 'Pointages', icon: Clock3 },
+  { id: 'Paramètres', label: 'Paramètres', icon: Building2 },
   { id: 'Administration', label: 'Administration', icon: Settings },
   { id: 'Invitations', label: 'Invitations', icon: Users },
   { id: 'Utilisateurs', label: 'Utilisateurs', icon: Users },
@@ -65,6 +76,22 @@ export default function AppLayout({
 }) {
   const [activePage, setActivePage] = useState('Dashboard');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [branding, setBranding] = useState<{ name?: string | null; logoUrl?: string | null }>({});
+
+  // Charger l'identité visuelle de l'organisation (nom + logo).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/org/branding', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          if (!cancelled) setBranding({ name: json.name, logoUrl: json.logoUrl });
+        }
+      } catch { /* silencieux : fallback sur le nom fourni par le contexte */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Fermer le drawer avec la touche Échap
   useEffect(() => {
@@ -89,8 +116,13 @@ export default function AppLayout({
       <nav className={'sidebar' + (drawerOpen ? ' open' : '')} aria-label="Navigation principale">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <span className="sidebar-brand" style={{ padding: '0 4px' }}>
-            <span className="brand-mark"><ShieldCheck size={16} /></span>
-            TASKPULSE
+            {branding.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={branding.logoUrl} alt="Logo de l’organisation" style={{ width: 34, height: 34, borderRadius: 9, objectFit: 'contain', background: '#fff', border: '1px solid var(--line)' }} />
+            ) : (
+              <span className="brand-mark"><ShieldCheck size={16} /></span>
+            )}
+            {branding.name ?? organization?.name ?? 'TASKPULSE'}
           </span>
           <button className="menu-button" style={{ display: 'inline-flex', width: 36, height: 36 }} onClick={() => setDrawerOpen(false)} aria-label="Fermer le menu">
             <X size={17} />
@@ -128,7 +160,7 @@ export default function AppLayout({
           </button>
           <div style={{ minWidth: 0 }}>
             <div className="topbar-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {organization?.name ?? 'TaskPulse'}
+              {branding.name ?? organization?.name ?? 'TaskPulse'}
             </div>
             <div className="topbar-crumb">{activePage}</div>
           </div>
@@ -189,6 +221,8 @@ function renderContent(
   switch (page) {
     case 'Dashboard':
       return <Dashboard ctx={ctx} />;
+    case 'Tâches':
+      return <TasksPanel admin={ctx.orgRole === 'ORGANIZATION_ADMIN'} currentUserId={ctx.user.id} />;
     case 'Pointage':
       return <AttendancePanel />;
     case 'Messages':
@@ -203,6 +237,14 @@ function renderContent(
       return <HistoryPanel />;
     case 'Notifications':
       return <NotificationsPanel />;
+    case 'Profil':
+      return <ProfilePanel />;
+    case 'Rapports':
+      return <ReportsPanel />;
+    case 'Pointages':
+      return <AdminAttendancePanel />;
+    case 'Paramètres':
+      return <OrgSettingsPanel organizationName={ctx.organization?.name ?? null} />;
     case 'Administration':
       return <AdminOverview onNavigate={setPage} />;
     case 'Invitations':

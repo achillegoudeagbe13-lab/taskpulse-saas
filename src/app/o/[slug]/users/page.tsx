@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MessageSquare, Settings, Trash2, Users, Send } from '../../../ui-icons';
+import { Clock3, Search, MessageSquare, Settings, Trash2, Users, Send, UserRound } from '../../../ui-icons';
 
 type MemberRow = {
   membershipId: string;
@@ -34,6 +34,23 @@ export default function UsersPage({
   const [notice, setNotice] = useState('');
   const [messageTarget, setMessageTarget] = useState<MemberRow | null>(null);
   const [messageError, setMessageError] = useState('');
+  const [supTarget, setSupTarget] = useState<MemberRow | null>(null);
+  const [supData, setSupData] = useState<any>(null);
+  const [supLoading, setSupLoading] = useState(false);
+
+  async function openSupervision(member: MemberRow) {
+    setSupTarget(member); setSupData(null); setError(''); setNotice('');
+    setSupLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${member.user.id}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Historique indisponible.');
+      setSupData(json);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur de chargement de l’historique.');
+      setSupTarget(null);
+    } finally { setSupLoading(false); }
+  }
 
   const filtered = members.filter((m) => {
     const q = query.toLowerCase();
@@ -179,6 +196,7 @@ export default function UsersPage({
                   <td className="p-3">{new Date(member.joinedAt).toLocaleDateString('fr-FR')}</td>
                   <td className="p-3">
                     <div className="flex gap-2">
+                      <button className="p-1 text-gray-600 hover:text-indigo-600" title={'Historique de travail de ' + member.user.firstName} onClick={() => openSupervision(member)}><UserRound size={15} /></button>
                       <button className="p-1 text-gray-600 hover:text-blue-600" title={'Message direct à ' + member.user.firstName} onClick={() => setMessageTarget(member)}><MessageSquare size={15} /></button>
                       <button className="p-1 text-gray-600 hover:text-green-600" title={member.user.status === 'ACTIF' ? 'Suspendre' : 'Réactiver'} onClick={() => toggleStatus(member)}><Settings size={15} /></button>
                       <button className="p-1 text-gray-600 hover:text-red-600" title="Retirer" onClick={() => removeFromOrg(member)}><Trash2 size={15} /></button>
@@ -206,6 +224,110 @@ export default function UsersPage({
           </form>
         </div>
       )}
+
+      {supTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSupTarget(null)}>
+          <div className="supervision" style={{ width: 'min(880px,100%)', maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div className="supervision-head">
+              <UserRound size={20} style={{ color: 'var(--blue)' }} />
+              <div>
+                <strong>Historique de travail — {supTarget.user.firstName} {supTarget.user.lastName}</strong>
+                <small>
+                  @{supTarget.user.username} · {roleLabels[supTarget.role] ?? supTarget.role}
+                  {supData?.member?.department ? ` · ${supData.member.department}` : ''}
+                  {' · '}membre depuis {new Date(supTarget.joinedAt).toLocaleDateString('fr-FR')}
+                </small>
+              </div>
+              <button className="close-x" onClick={() => setSupTarget(null)} aria-label="Fermer"><span style={{ fontSize: 14, lineHeight: 1 }}>×</span></button>
+            </div>
+
+            {supLoading ? (
+              <div className="loading-state" style={{ padding: '30px 0' }}><span className="spinner" /> Chargement de l’historique…</div>
+            ) : supData ? (
+              <>
+                <div className="supervision-grid">
+                  <div className="sup-cell"><small>Tâches assignées</small><strong>{supData.work.tasks.total}</strong><em>{supData.work.tasks.termine} terminée(s)</em></div>
+                  <div className="sup-cell"><small>En cours</small><strong>{supData.work.tasks.enCours}</strong><em>{supData.work.tasks.bloque} bloquée(s)</em></div>
+                  <div className="sup-cell"><small>Activités publiées</small><strong>{supData.work.activities.count}</strong><em>rapports d’activité</em></div>
+                  <div className="sup-cell"><small>Journal</small><strong>{supData.work.journalEntries}</strong><em>entrées cumulées</em></div>
+                  <div className="sup-cell"><small>Pointages (60 j)</small><strong>{supData.work.attendance.last30days}</strong><em>jours pointés</em></div>
+                </div>
+
+                <div style={{ padding: '0 22px 6px' }}>
+                  <p className="eyebrow" style={{ marginBottom: 10 }}><Clock3 size={13} style={{ verticalAlign: '-2px' }} /> DERNIERS POINTAGES</p>
+
+{supData.work.attendance.records.length === 0 ? (
+                    <p className="muted">Aucun pointage sur les 60 derniers jours.</p>
+                  ) : (
+                    <div className="plat-table-wrap">
+                      <table>
+                        <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Durée</th></tr></thead>
+                        <tbody>
+                          {supData.work.attendance.records.map((r: any) => (
+                            <tr key={r.id}>
+                              <td>{new Date(r.clockIn).toLocaleDateString('fr-FR')}</td>
+                              <td>{new Date(r.clockIn).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</td>
+                              <td>{r.clockOut ? new Date(r.clockOut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                              <td>{duration(r.clockIn, r.clockOut)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ padding: '16px 22px 4px' }}>
+                  <p className="eyebrow" style={{ marginBottom: 10 }}>DERNIÈRES TÂCHES ASSIGNÉES</p>
+                  {supData.work.tasks.recent.length === 0 ? (
+                    <p className="muted">Aucune tâche assignée.</p>
+                  ) : (
+                    <ul className="dash-list">
+                      {supData.work.tasks.recent.map((t: any) => (
+                        <li key={t.id}>
+                          <span>{t.title}</span>
+                          <span className={'status-badge ' + (t.status === 'TERMINE' ? 'termine' : t.status === 'EN_COURS' ? 'en_cours' : t.status === 'BLOQUE' ? 'bloque' : 'en_attente')}>
+                            {t.status === 'TERMINE' ? 'Terminée' : t.status === 'EN_COURS' ? 'En cours' : t.status === 'BLOQUE' ? 'Bloquée' : 'En attente'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div style={{ padding: '16px 22px 18px' }}>
+                  <p className="eyebrow" style={{ marginBottom: 10 }}>DERNIÈRES ACTIVITÉS</p>
+                  {supData.work.activities.recent.length === 0 ? (
+                    <p className="muted">Aucune activité publiée.</p>
+                  ) : (
+                    <ul className="dash-list">
+                      {supData.work.activities.recent.map((a: any) => (
+                        <li key={a.id}>
+                          <span>{a.title}</span>
+                          <span className={'status-badge ' + (a.status === 'TERMINE' ? 'termine' : a.status === 'BLOQUE' ? 'bloque' : 'en_cours')}>
+                            {new Date(a.createdAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <p className="sup-note">
+                  🔒 Confidentialité : cet historique se limite aux pointages, tâches et activités.
+                  La <strong>messagerie privée</strong> du membre n’est jamais accessible à l’administration.
+                </p>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function duration(clockIn: string, clockOut: string | null) {
+  if (!clockOut) return '—';
+  const minutes = Math.max(0, Math.round((new Date(clockOut).getTime() - new Date(clockIn).getTime()) / 60000));
+  return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
 }

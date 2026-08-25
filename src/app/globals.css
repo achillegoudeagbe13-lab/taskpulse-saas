@@ -394,3 +394,27 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   .auth-art .art-footer{display:none}
   .auth-panel{width:100%;padding:30px 22px 40px}
 }
+
+/* ---- Profil utilisateur ---- */
+.profile-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media(max-width:900px){.profile-facts{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.profile-facts{grid-template-columns:1fr}}
+.profile-facts div{border:1px solid var(--line-2);border-radius:12px;padding:13px 14px;background:#fff}
+.profile-facts small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#98a2b3;margin-bottom:7px}
+.profile-facts strong{font-size:13px}
+.profile-form .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:620px){.profile-form .two-col{grid-template-columns:1fr}}
+.profile-form label{display:grid;gap:6px;margin-bottom:14px}
+.profile-form label>span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#465065}
+.profile-form input,.profile-form textarea,.profile-form select{width:100%;border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px;background:#fff;color:var(--ink);outline:0;font-family:inherit}
+.profile-form input:focus,.profile-form textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #e5ebff}
+.profile-form textarea{resize:vertical;min-height:84px}
+
+/* ---- Paramètres org : logo ---- */
+.logo-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.logo-preview{width:96px;height:96px;border:1px dashed var(--line);border-radius:var(--radius);display:grid;place-items:center;overflow:hidden;background:#fbfbfe;flex-shrink:0}
+.logo-preview img{max-width:84px;max-height:84px;object-fit:contain}
+.logo-placeholder{font:700 26px 'Space Grotesk',sans-serif;color:#b3b9c8;letter-spacing:.02em}
+.logo-actions{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;min-width:240px;flex-direction:column}
+.logo-actions .logo-remove{color:var(--red);border-color:#f0b2b4}
+.logo-actions small{max-width:320px;line-height:1.5}
