@@ -49,7 +49,7 @@ export default function PlatformOverview() {
         <div>
           <p className="eyebrow">PLATEFORME</p>
           <h1>Administrateur plateforme</h1>
-          <p className="muted">Vue globale de TaskPulse. Les données privées des organisations restent inaccessibles depuis cette console.</p>
+          <p className="muted">Vue globale de Mar-ci Flow. Les données privées des organisations restent inaccessibles depuis cette console.</p>
         </div>
         <button className="outline-button" onClick={load}><RefreshCw size={17} /> Actualiser</button>
       </div>

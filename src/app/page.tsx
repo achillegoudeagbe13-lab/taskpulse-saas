@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <main className="hero">
       <span className="hero-badge"><Zap size={13} fill="currentColor" /> NOUVEAU · GESTION D’ÉQUIPE SIMPLIFIÉE</span>
-      <h1>TaskPulse.<br />Le travail, <em>en mouvement.</em></h1>
+      <h1>Mar-ci Flow.<br />Le travail, <em>en mouvement.</em></h1>
       <p>
         Tâches, pointage, journal de travail, annonces et messagerie —
         tout ce dont votre équipe a besoin, réuni dans un espace clair et sécurisé.

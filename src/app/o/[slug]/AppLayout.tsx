@@ -122,7 +122,7 @@ export default function AppLayout({
             ) : (
               <span className="brand-mark"><ShieldCheck size={16} /></span>
             )}
-            {branding.name ?? organization?.name ?? 'TASKPULSE'}
+            {branding.name ?? organization?.name ?? 'MAR-CI FLOW'}
           </span>
           <button className="menu-button" style={{ display: 'inline-flex', width: 36, height: 36 }} onClick={() => setDrawerOpen(false)} aria-label="Fermer le menu">
             <X size={17} />
@@ -160,7 +160,7 @@ export default function AppLayout({
           </button>
           <div style={{ minWidth: 0 }}>
             <div className="topbar-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {branding.name ?? organization?.name ?? 'TaskPulse'}
+              {branding.name ?? organization?.name ?? 'Mar-ci Flow'}
             </div>
             <div className="topbar-crumb">{activePage}</div>
           </div>

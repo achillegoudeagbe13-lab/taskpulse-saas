@@ -55,7 +55,7 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <div className="auth-art">
-        <div className="brand"><span className="brand-mark"><Zap size={16} fill="currentColor" /></span> TASKPULSE</div>
+        <div className="brand"><span className="brand-mark"><Zap size={16} fill="currentColor" /></span> MAR-CI FLOW</div>
         <div className="art-copy">
           <p className="eyebrow">ESPACE MEMBRE</p>
           <h1>Le travail, <em>en mouvement.</em></h1>
@@ -67,7 +67,7 @@ export default function LoginPage() {
       <section className="auth-panel">
         <form onSubmit={handleSubmit}>
           <h2>Bon retour 👋</h2>
-          <p className="muted" style={{ marginTop: -4, marginBottom: 0 }}>Connectez-vous à votre espace TaskPulse.</p>
+          <p className="muted" style={{ marginTop: -4, marginBottom: 0 }}>Connectez-vous à votre espace Mar-ci Flow.</p>
 
           <label style={{ display: 'grid', gap: 6, marginTop: 24 }}>
             <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.08em', color: '#465065' }}>IDENTIFIANT</span>

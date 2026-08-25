@@ -52,7 +52,7 @@ export default function RegisterOrgPage() {
   return (
     <main className="auth-page">
       <div className="auth-art">
-        <div className="brand"><span className="brand-mark"><Zap size={16} fill="currentColor" /></span> TASKPULSE</div>
+        <div className="brand"><span className="brand-mark"><Zap size={16} fill="currentColor" /></span> MAR-CI FLOW</div>
         <div className="art-copy">
           <p className="eyebrow">CRÉER VOTRE ESPACE</p>
           <h1>Votre organisation, <em>prête en 2 minutes.</em></h1>
@@ -65,7 +65,7 @@ export default function RegisterOrgPage() {
         <form
           onSubmit={step === 1 ? handleOrgSubmit : handleSubmit}
         >
-          <h2>TaskPulse</h2>
+          <h2>Mar-ci Flow</h2>
           <p className="muted" style={{ marginTop: -4, marginBottom: 0 }}>
             {step === 1 ? 'Créer votre organisation — Étape 1/2' : 'Compte responsable — Étape 2/2'}
           </p>

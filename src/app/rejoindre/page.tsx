@@ -84,7 +84,7 @@ export default function JoinPage() {
   return (
     <main className="auth-page">
       <div className="auth-art">
-        <div className="brand"><span className="brand-mark"><Zap size={18} fill="currentColor" /></span> TASKPULSE</div>
+        <div className="brand"><span className="brand-mark"><Zap size={18} fill="currentColor" /></span> MAR-CI FLOW</div>
         <div className="art-copy">
           <p className="eyebrow">INVITATION ÉQUIPE</p>
           <h1>Un seul lien<br /><em>et vous êtes dans la boucle.</em></h1>
@@ -93,7 +93,7 @@ export default function JoinPage() {
         <div className="art-footer"><span>Suivi intelligent</span><span>•</span><span>Équipe en mouvement</span></div>
       </div>
       <section className="auth-panel">
-        <div className="auth-mobile-brand"><span className="brand-mark"><Zap size={17} fill="currentColor" /></span> TASKPULSE</div>
+        <div className="auth-mobile-brand"><span className="brand-mark"><Zap size={17} fill="currentColor" /></span> MAR-CI FLOW</div>
         <Suspense fallback={<div className="loading-state"><span className="spinner" /> Chargement…</div>}>
           <JoinForm />
         </Suspense>

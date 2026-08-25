@@ -199,7 +199,7 @@ tbody tr:hover{background:#fafbff}
 @media(max-width:600px){.admin-sections{grid-template-columns:1fr}.history-row{flex-wrap:wrap}}
 
 /* =====================================================================
-   DESIGN SYSTEM v2 — TaskPulse (moderne, responsive, pro)
+   DESIGN SYSTEM v2 — Mar-ci Flow (moderne, responsive, pro)
    ===================================================================== */
 :root{
   --ink:#101828;--ink-2:#344054;--muted:#667085;--line:#e6eaf2;--line-2:#eef1f7;

@@ -94,7 +94,7 @@ export default function PlatformPage() {
     <div className="section-page" style={{ paddingTop: 22 }}>
       <div className="plat-hero">
         <div>
-          <span className="plat-brand"><ShieldCheck size={17} /> TASKPULSE · PLATEFORME</span>
+          <span className="plat-brand"><ShieldCheck size={17} /> MAR-CI FLOW · PLATEFORME</span>
           <h1>Administration globale</h1>
           <p>Connecté en tant que {data?.viewerEmail ?? '…'} — supervision de toutes les organisations.</p>
         </div>
