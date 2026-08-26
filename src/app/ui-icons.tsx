@@ -47,4 +47,10 @@ export const X = (props: IconProps) => <Icon {...props}><path d="m6 6 12 12M18 6
 export const Zap = (props: IconProps) => <Icon {...props}><path d="m13 2-9 12h7l-1 8 9-12h-7z" /></Icon>;
 export const ArrowLeft = (props: IconProps) => <Icon {...props}><path d="M19 12H5M12 19l-7-7 7-7" /></Icon>;
 export const Ban = (props: IconProps) => <Icon {...props}><circle cx="12" cy="12" r="9" /><path d="m5.6 5.6 12.8 12.8" /></Icon>;
+export const Calendar = CalendarDays;
+export const MapPin = (props: IconProps) => <Icon {...props}><path d="M20 10v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10" /><path d="M20 10V6a2 2 0 0 0-2-2h-1V2h-2v2H9V2H7v2H6a2 2 0 0 0-2 2v4" /><circle cx="12" cy="14" r="3" /></Icon>;
+export const MapPinOff = (props: IconProps) => <Icon {...props}><path d="M20 10c0 6-8 12-8 12s-2.4-3.2-3.6-5" /><line x1="2" y1="2" x2="22" y2="22" /><circle cx="10" cy="8" r="3" /><path d="M14.5 7.5L17 5l3 3-2.5 2.5" /></Icon>;
+export const HelpCircle = (props: IconProps) => <Icon {...props}><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 1 1 5.83 1c0 1.5-.73 2-1.5 3" /><line x1="12" y1="16" x2="12.01" y2="16" /></Icon>;
+export const Clock = (props: IconProps) => <Icon {...props}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Icon>;
+export const Filter = (props: IconProps) => <Icon {...props}><polygon points="22 3 10 9 4 14 4 20 10 17 14 21 20 18 20 13 22 12z" /><path d="M4 20l7-4M4 12l7-4M4 4l7 4M17 20l4-3M17 8l4-3" /></Icon>;
 export const Building2 = (props: IconProps) => <Icon {...props}><rect x="4" y="3" width="10" height="18" rx="1" /><path d="M14 8h5a1 1 0 0 1 1 1v12H4M7 7h.01M11 7h.01M7 11h.01M11 11h.01M7 15h.01M11 15h.01M17 12h.01M17 16h.01" /></Icon>;

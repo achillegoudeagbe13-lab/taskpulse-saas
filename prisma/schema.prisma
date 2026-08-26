@@ -123,6 +123,8 @@ model Organization {
   attendances    Attendance[]
   journalEntries JournalEntry[]
   journalCategories JournalCategory[]
+  meetings       Meeting[]
+  leaveRequests  LeaveRequest[]
 }
 
 model Membership {
@@ -199,6 +201,9 @@ model User {
   activeOrganizationId String?
   memberships          Membership[]
   sentInvitations      Invitation[]
+  createdMeetings      Meeting[]
+  leaveRequests        LeaveRequest[]
+  meetingAttendees     MeetingAttendee[]
 }
 
 model WorkJournal {
@@ -348,7 +353,13 @@ model Attendance {
   organizationId String?
   clockIn   DateTime
   clockOut  DateTime?
+  latitude  Float?    // Position enregistrée (audit) ; utilisée pour le contrôle GPS optionnel.
+  longitude Float?
+  // Métadonnées de l'équipement pour l'audit (ex: "mobile-safari").
+  userAgent String?
   createdAt DateTime  @default(now())
+
+  @@index([organizationId, clockIn])
 }
 
 model Activity {
@@ -437,6 +448,75 @@ model AuditLog {
   organizationId String?
   createdAt DateTime @default(now())
 
-  @@index([createdAt])
+    @@index([createdAt])
   @@index([action])
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MeetingAttendeeStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  TENTATIVE
+}
+
+/// Demande de congé / absence (affichée dans le calendrier et le suivi présences).
+model LeaveRequest {
+  id             String             @id @default(cuid())
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization?      @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  type           String             @default("CONGE")
+  startDate      DateTime
+  endDate        DateTime
+  reason         String?
+  status         LeaveStatus        @default(PENDING)
+  decidedById    String?
+  decidedAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([status])
+}
+
+/// Réunion d'équipe (affichée dans le calendrier).
+model Meeting {
+  id            String            @id @default(cuid())
+  title         String
+  description   String?
+  startAt       DateTime
+  endAt         DateTime
+  meetingLink   String?
+  location      String?
+  organization  Organization?     @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  createdBy     User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  attendees     MeetingAttendee[]
+
+  @@index([organizationId])
+  @@index([startAt])
+}
+
+model MeetingAttendee {
+  id        String                @id @default(cuid())
+  meeting   Meeting               @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  meetingId String
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  status    MeetingAttendeeStatus   @default(PENDING)
+
+  @@unique([meetingId, userId])
+  @@index([userId])
 }

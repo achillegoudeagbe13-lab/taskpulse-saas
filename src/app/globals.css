@@ -413,8 +413,82 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 /* ---- Paramètres org : logo ---- */
 .logo-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
 .logo-preview{width:96px;height:96px;border:1px dashed var(--line);border-radius:var(--radius);display:grid;place-items:center;overflow:hidden;background:#fbfbfe;flex-shrink:0}
-.logo-preview img{max-width:84px;max-height:84px;object-fit:contain}
-.logo-placeholder{font:700 26px 'Space Grotesk',sans-serif;color:#b3b9c8;letter-spacing:.02em}
-.logo-actions{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;min-width:240px;flex-direction:column}
-.logo-actions .logo-remove{color:var(--red);border-color:#f0b2b4}
 .logo-actions small{max-width:320px;line-height:1.5}
+
+/* ---- Géolocalisation (pointage) ---- */
+.geo-hint{display:flex;align-items:center;gap:8px;padding:10px 13px;border-radius:var(--radius-sm);font-size:12.5px;margin-top:14px;background:#f0f5ff;color:#3b4ed8;border:1px solid #d7e0ff}
+.geo-hint.denied,.geo-hint.needed{background:#fff1f0;color:#b3403a;border-color:#f0c4c0}
+.geo-hint.authorized{background:#eef9ee;color:#22743a;border-color:#c3e8c8}
+.geo-toggle{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+.geo-toggle input{width:18px;height:18px;accent-color:#4f46e5}
+.geo-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+.geo-field{display:grid;gap:6px}
+.geo-field label{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#98a2b3}
+.geo-field input{border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--ink);outline:0;background:#fff;font-family:inherit}
+.geo-field input:focus{border-color:#6366f1;box-shadow:0 0 0 3px #e5ebff}
+@media(max-width:620px){.geo-fields{grid-template-columns:1fr}}
+
+/* ---- Calendrier interactif ---- */
+.calendar-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px}
+.calendar-modes{display:flex;gap:4px;background:#f1f3f8;border-radius:10px;padding:3px}
+.mode-button{border:0;background:transparent;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;color:#667085;cursor:pointer}
+.mode-button.active{background:#fff;color:#3b4ed8;box-shadow:0 1px 3px rgba(16,24,40,.1)}
+.calendar-nav{display:flex;align-items:center;gap:6px}
+.calendar-title{font-size:14px;font-weight:800;color:var(--ink);min-width:120px;text-align:center}
+.icon-button{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;color:var(--ink);cursor:pointer}
+.icon-button:hover{background:#f7f8fb}
+.calendar-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.calendar-filters{display:flex;flex-wrap:wrap;gap:18px;padding:14px 16px;background:#fbfbfe;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px}
+.filter-group{display:flex;flex-direction:column;gap:6px}
+.filter-group>span{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#98a2b3}
+.filter-group label{display:flex;align-items:center;gap:7px;font-size:13px;color:#475467;cursor:pointer}
+.filter-group input[type=checkbox]{accent-color:#4f46e5}
+.filter-group select{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.calendar-grid .weekday{display:contents}
+.calendar-grid .weekday span{text-align:center;font-size:11px;font-weight:800;color:#98a2b3;padding:4px 0;letter-spacing:.04em}
+.calendar-day-cell{min-height:92px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;position:relative;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.calendar-day-cell.today{border-color:#6366f1;box-shadow:inset 0 0 0 1px #6366f1;background:#faf9ff}
+.calendar-day-num{font-size:12px;font-weight:800;color:#475467}
+.calendar-day-cell.today .calendar-day-num{color:#4f46e5}
+.calendar-dots{display:flex;gap:4px;padding:2px 0}
+.calendar-dots .dot{width:8px;height:8px;border-radius:50%}
+.calendar-items{display:flex;flex-direction:column;gap:4px;overflow:auto;max-height:100%}
+.calendar-event{display:block;background:#f8f9fc;border-radius:6px;padding:4px 6px;font-size:11px;line-height:1.3;overflow:hidden}
+.calendar-event .ev-time{display:block;font-size:10px;font-weight:800;color:#98a2b3}
+.calendar-event .ev-title{font-weight:700;color:var(--ink);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calendar-event .ev-user{display:block;font-size:10px;color:#7a8296;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calendar-legend{display:flex;gap:18px;flex-wrap:wrap;padding:10px 4px}
+.calendar-legend span{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#667085}
+.legend-dot{width:10px;height:10px;border-radius:3px}
+
+/* ---- Centre d'aide / Guide ---- */
+.help-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tab-button{border:1px solid var(--line);background:#fff;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;color:#667085;cursor:pointer}
+.tab-button.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(79,70,229,.25)}
+.help-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.help-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px}
+.help-card header{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.help-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:#eef0ff;color:#4f46e5;flex-shrink:0}
+.help-card h2{font-size:15px;font-weight:800;color:var(--ink)}
+.help-body{font-size:13px;color:#475467;line-height:1.6}
+.help-body h3{font-size:12.5px;font-weight:800;color:var(--ink);margin:10px 0 4px}
+.help-body p{margin:5px 0}
+.help-body ul{margin:4px 0;padding-left:18px}
+
+/* ---- Modals génériques ---- */
+.modal-overlay{position:fixed;inset:0;background:rgba(16,24,40,.55);backdrop-filter:blur(2px);display:grid;place-items:center;padding:20px;z-index:1000;animation:fadeIn .15s ease}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:480px;box-shadow:0 20px 50px rgba(16,24,40,.25);overflow:hidden;animation:popIn .18s ease}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);background:#faf9ff}
+.modal-header h2{font-size:16px;font-weight:800;color:var(--ink)}
+.modal-body{padding:18px 20px;display:grid;gap:14px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:4px 0 2px;margin-top:4px}
+.form-row{display:grid;gap:6px}
+.form-row label{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#98a2b3}
+.form-row input,.form-row select,.form-row textarea{width:100%;border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;font-family:inherit;color:var(--ink);outline:0;background:#fff}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:#6366f1;box-shadow:0 0 0 3px #e5ebff}
+.members-checkboxes{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:160px;overflow:auto;padding:4px}
+.members-checkboxes label{display:flex;align-items:center;gap:7px;font-size:13px;color:#475467;cursor:pointer}
+.notice.success{background:#eef7f0;color:#22743a;border:1px solid #c3e8c8;padding:10px 13px;border-radius:10px;font-size:13px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}

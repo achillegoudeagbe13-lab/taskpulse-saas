@@ -14,6 +14,7 @@ import NotificationsPanel from '../../notifications-panel';
 import TasksPanel from '../../tasks-panel';
 import ProfilePanel from '../../profile-panel';
 import ReportsPanel from '../../reports-panel';
+import HelpCenter from '../../help-center';
 import AdminAttendancePanel from '../../admin-attendance-panel';
 import OrgSettingsPanel from '../../org-settings-panel';
 import UsersPage from './users/page';
@@ -22,7 +23,7 @@ import NotificationBell from '../../notification-bell';
 import {
   LayoutDashboard, MessageSquare, Bell, Activity, BookOpen,
   Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut, Menu, X,
-  KanbanSquare, UserRound, BarChart3, Building2,
+  KanbanSquare, UserRound, BarChart3, Building2, HelpCircle,
 } from '../../ui-icons';
 
 type User = {
@@ -52,7 +53,8 @@ const MEMBER_TABS = [
   { id: 'Activités', label: 'Activités', icon: Activity },
   { id: 'Journal de travail', label: 'Journal de travail', icon: BookOpen },
   { id: 'Historique', label: 'Historique', icon: Clock3 },
-  { id: 'Profil', label: 'Profil', icon: UserRound },
+      { id: 'Profil', label: 'Profil', icon: UserRound },
+  { id: 'Aide', label: 'Aide / Guide', icon: HelpCircle },
 ];
 
 const ADMIN_TABS = [
@@ -239,6 +241,8 @@ function renderContent(
       return <NotificationsPanel />;
     case 'Profil':
       return <ProfilePanel />;
+    case 'Aide':
+      return <HelpCenter />;
     case 'Rapports':
       return <ReportsPanel />;
     case 'Pointages':

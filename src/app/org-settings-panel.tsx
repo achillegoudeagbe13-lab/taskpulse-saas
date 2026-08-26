@@ -5,6 +5,7 @@ import { Building2, RefreshCw, Trash2 } from './ui-icons';
 
 export default function OrgSettingsPanel({ organizationName }: { organizationName: string | null }) {
   const [settings, setSettings] = useState<{ organizationName?: string; logoUrl?: string }>({});
+  const [geo, setGeo] = useState({ enabled: false, lat: '', lng: '', radius: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState('');
   const [error, setError] = useState('');
@@ -18,6 +19,8 @@ export default function OrgSettingsPanel({ organizationName }: { organizationNam
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Chargement impossible.');
       setSettings(json.settings ?? {});
+      const g = json.settings ?? {};
+      setGeo({ enabled: g.geoEnabled === 'true', lat: g.geoLat ?? '', lng: g.geoLng ?? '', radius: g.geoRadiusMeters ?? '' });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de chargement.');
     } finally { setLoading(false); }
@@ -77,6 +80,28 @@ export default function OrgSettingsPanel({ organizationName }: { organizationNam
     } finally { setSaving(''); }
   }
 
+  function saveGeo() {
+    setSaving('geo'); setError(''); setNotice('');
+    const lat = Number(geo.lat); const lng = Number(geo.lng); const radius = Number(geo.radius);
+    if (geo.enabled && (Number.isNaN(lat) || Number.isNaN(lng))) { setError('Renseignez les coordonnées GPS (latitude / longitude) du bureau.'); setSaving(''); return; }
+    if (geo.enabled && (Number.isNaN(radius) || radius < 5)) { setError('Indiquez un rayon de tolérance valide (en mètres).'); setSaving(''); return; }
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          geoEnabled: geo.enabled,
+          geoLat: geo.enabled ? lat : undefined,
+          geoLng: geo.enabled ? lng : undefined,
+          geoRadiusMeters: geo.enabled ? Math.round(radius) : undefined,
+        }) });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error ?? 'Enregistrement impossible.');
+        setNotice(geo.enabled ? 'Contrôle GPS du pointage activé.' : 'Contrôle GPS désactivé (position toujours enregistrée en audit).');
+        load();
+      } catch (e) { setError(e instanceof Error ? e.message : 'Erreur inattendue.'); }
+      finally { setSaving(''); }
+    })();
+  }
+
   if (loading) return <div className="loading-state"><span className="spinner" /> Chargement des paramètres…</div>;
 
   return (
@@ -128,6 +153,23 @@ export default function OrgSettingsPanel({ organizationName }: { organizationNam
             )}
             <small className="muted">PNG, JPEG, WebP ou SVG · 1,2 Mo max.<br />Affiché dans la barre latérale pour tous les membres.</small>
           </div>
+        </div>
+      </section>
+
+      <section className="panel" style={{ marginTop: 18 }}>
+        <div className="panel-heading"><h3>Contrôle GPS du pointage</h3></div>
+        <p className="muted" style={{ marginBottom: 12 }}>Exigez la présence des employés sur site au moment de pointer, ou enregistrez leur position pour l’audit du manager.</p>
+        <label className="geo-toggle"><input type="checkbox" checked={geo.enabled} onChange={(e) => setGeo({ ...geo, enabled: e.target.checked })} /> Activer le contrôle GPS du pointage</label>
+        {geo.enabled && (
+          <div className="geo-fields">
+            <div className="geo-field"><label>Latitude du bureau</label><input value={geo.lat} onChange={(e) => setGeo({ ...geo, lat: e.target.value })} placeholder="Ex. 48.8566" inputMode="decimal" /></div>
+            <div className="geo-field"><label>Longitude du bureau</label><input value={geo.lng} onChange={(e) => setGeo({ ...geo, lng: e.target.value })} placeholder="Ex. 2.3522" inputMode="decimal" /></div>
+            <div className="geo-field"><label>Rayon de tolérance (mètres)</label><input value={geo.radius} onChange={(e) => setGeo({ ...geo, radius: e.target.value })} placeholder="Ex. 150" inputMode="numeric" /></div>
+          </div>
+        )}
+        <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button className="primary-button" onClick={saveGeo} disabled={saving === 'geo'}>{saving === 'geo' ? 'Enregistrement…' : 'Enregistrer le contrôle GPS'}</button>
+          {geo.enabled && <a href="https://www.google.com/maps" target="_blank" rel="noreferrer" className="outline-button" style={{ textDecoration: 'none' }}>Ouvrir Google Maps</a>}
         </div>
       </section>
     </div>

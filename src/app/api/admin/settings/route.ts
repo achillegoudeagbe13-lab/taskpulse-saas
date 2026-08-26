@@ -3,7 +3,15 @@ import { z } from 'zod';
 import { requireOrgAdmin } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 
-const schema = z.object({ organizationName: z.string().trim().min(1).max(120).optional(), logoUrl: z.string().max(1_600_000).optional() });
+const schema = z.object({
+  organizationName: z.string().trim().min(1).max(120).optional(),
+  logoUrl: z.string().max(1_600_000).optional(),
+  // Contrôle GPS du pointage (activé/désactivé + zone géographique).
+  geoEnabled: z.boolean().optional(),
+  geoLat: z.number().min(-90).max(90).optional(),
+  geoLng: z.number().min(-180).max(180).optional(),
+  geoRadiusMeters: z.number().int().min(5).max(50000).optional(),
+});
 
 /** Paramètres de l'organisation active uniquement. */
 export async function GET() {
