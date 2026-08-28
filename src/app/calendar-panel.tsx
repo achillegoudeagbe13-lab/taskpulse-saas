@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Clock } from './ui-icons';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Plus } from './ui-icons';
+import LeaveModal from './leave-modal';
+import MeetingModal from './meeting-modal';
 
 type CalEvent = { id: string; type: 'task' | 'meeting' | 'leave'; title: string; startAt: string; endAt?: string | null; color: string; allDay: boolean; user?: { name?: string }; };
 type Member = { id: string; name: string };
@@ -66,7 +68,25 @@ export default function CalendarPanel({ user }: { user: any }) {
           <div className="filter-group"><span>Membre</span><select value={memberId} onChange={(e) => setMemberId(e.target.value as any)}><option value="all">Toute l’équipe</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
         </div>
       )}
-      <section className="calendar-grid">{mode === 'month' && <div className="weekday">{['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d) => <span key={d}>{d}</span>)}</div>}{/* __DAY_CELLS__ */}</section>
+      <section className="calendar-grid">{mode === 'month' && <div className="weekday">{['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d) => <span key={d}>{d}</span>)}</div>}
+        {visible.map(({ day, items }) => (
+          <div key={day.toISOString()} className={'calendar-day-cell' + (sameDay(day, new Date()) ? ' today' : '')}>
+            <span className="calendar-day-num">{day.getDate()}</span>
+            {items.length > 0 && (
+              <div className="calendar-items">
+                {items.slice(0, mode === 'month' ? 3 : 10).map((e) => (
+                  <div key={e.id} className={'calendar-event ev-' + e.type} style={{ borderLeftColor: e.color }} title={`${TYPE_LABELS[e.type]} · ${e.title}${e.user?.name ? ' — ' + e.user.name : ''}`}>
+                    {!e.allDay && <span className="ev-time">{new Date(e.startAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
+                    <span className="ev-title">{e.title}</span>
+                    {e.user?.name && mode !== 'month' && <span className="ev-user">{e.user.name}</span>}
+                  </div>
+                ))}
+                {mode === 'month' && items.length > 3 && <span className="ev-more">+{items.length - 3} autre(s)</span>}
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
       <div className="calendar-legend">{(['task', 'meeting', 'leave'] as CalEvent['type'][]).map((t) => <span key={t}><span className="legend-dot" style={{ background: TYPE_COLORS[t] }} />{TYPE_LABELS[t]}</span>)}</div>
     </div>
   );

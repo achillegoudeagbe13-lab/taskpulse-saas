@@ -54,3 +54,7 @@ export const HelpCircle = (props: IconProps) => <Icon {...props}><circle cx="12"
 export const Clock = (props: IconProps) => <Icon {...props}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Icon>;
 export const Filter = (props: IconProps) => <Icon {...props}><polygon points="22 3 10 9 4 14 4 20 10 17 14 21 20 18 20 13 22 12z" /><path d="M4 20l7-4M4 12l7-4M4 4l7 4M17 20l4-3M17 8l4-3" /></Icon>;
 export const Building2 = (props: IconProps) => <Icon {...props}><rect x="4" y="3" width="10" height="18" rx="1" /><path d="M14 8h5a1 1 0 0 1 1 1v12H4M7 7h.01M11 7h.01M7 11h.01M11 11h.01M7 15h.01M11 15h.01M17 12h.01M17 16h.01" /></Icon>;
+export const Key = (props: IconProps) => <Icon {...props}><circle cx="7.5" cy="15.5" r="4.5" /><path d="m10.7 12.3 8-8M17 5l2.5 2.5M14 8l2.5 2.5" /></Icon>;
+export const Sparkles = (props: IconProps) => <Icon {...props}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z" /><path d="M19 15l.9 2.4L22 18l-2.1.6L19 21l-.9-2.4L16 18l2.1-.6L19 15Z" /></Icon>;
+export const Sun = (props: IconProps) => <Icon {...props}><circle cx="12" cy="12" r="4" /><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" /></Icon>;
+export const Moon = (props: IconProps) => <Icon {...props}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></Icon>;

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import { requireOrgAdmin } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { writeAudit } from '../../../../lib/audit';
@@ -42,8 +43,8 @@ export async function PATCH(request: Request) {
   const auth = await requireOrgAdmin();
   if (auth.error) return auth.error;
   try {
-    const input = z.object({ id: z.string(), status: z.enum(['ACTIF', 'INACTIF', 'SUSPENDU']).optional(), role: z.enum(['ORGANIZATION_ADMIN', 'EMPLOYEE', 'INTERN']).optional(), department: z.string().trim().max(100).optional() }).parse(await request.json());
-    if (!input.status && !input.role && !input.department) return NextResponse.json({ error: 'Modification invalide.' }, { status: 400 });
+    const input = z.object({ id: z.string(), status: z.enum(['ACTIF', 'INACTIF', 'SUSPENDU']).optional(), role: z.enum(['ORGANIZATION_ADMIN', 'EMPLOYEE', 'INTERN']).optional(), department: z.string().trim().max(100).optional(), newPassword: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères.').max(128).optional() }).parse(await request.json());
+    if (!input.status && !input.role && !input.department && !input.newPassword) return NextResponse.json({ error: 'Modification invalide.' }, { status: 400 });
     if (input.id === auth.ctx.user.id && input.role && input.role !== 'ORGANIZATION_ADMIN') return NextResponse.json({ error: 'Vous ne pouvez pas retirer vos propres permissions administrateur.' }, { status: 400 });
 
     // La cible doit être membre de L'ORGANISATION ACTIVE.
@@ -60,7 +61,18 @@ export async function PATCH(request: Request) {
     if (input.status || departmentId) {
       await prisma.user.update({ where: { id: input.id }, data: { ...(input.status ? { status: input.status } : {}), ...(departmentId ? { departmentId } : {}) } });
     }
-    await writeAudit(auth.ctx.user.id, 'MODIFICATION_MEMBRE', 'User', input.id, { role: input.role, status: input.status, organizationId: auth.ctx.organizationId });
+
+    // Réinitialisation sécurisée du mot de passe (hash bcrypt) + invalidation des sessions actives.
+    if (input.newPassword) {
+      const passwordHash = await bcrypt.hash(input.newPassword, 12);
+      await prisma.$transaction([
+        prisma.user.update({ where: { id: input.id }, data: { passwordHash } }),
+        // On révoque toutes les sessions ouvertes : l'utilisateur devra se reconnecter.
+        prisma.session.deleteMany({ where: { userId: input.id } }),
+      ]);
+    }
+
+    await writeAudit(auth.ctx.user.id, input.newPassword ? 'REINITIALISATION_MOT_DE_PASSE' : 'MODIFICATION_MEMBRE', 'User', input.id, { role: input.role, status: input.status, organizationId: auth.ctx.organizationId });
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues[0]?.message ?? 'Données invalides.' }, { status: 400 });

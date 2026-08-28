@@ -1,0 +1,33 @@
+collecting page data for /api/journal/actions because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/branding because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/notifications because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/messages because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/leaves/[id] because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/switch because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/leaves because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/register because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/journal because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/journal/report because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/platform/orgs/[id] because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/platform/overview because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/profile because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /_not-found because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /o/[slug] because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /o/[slug]/users because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/users because it took more than 60 seconds
+ ⚠ Restarted collecting page data for / because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/meetings because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /login because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /platform because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /rejoindre because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /register-org because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/tasks because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/calendar because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/admin/users because it took more than 60 seconds
+ ⚠ Sending SIGTERM signal to static worker due to timeout of 60 seconds. Subsequent errors may be a result of the worker exiting.
+ ⨯ Static worker exited with code: null and signal: SIGTERM
+unhandledRejection Error: Collecting page data for /_app is still timing out after 2 attempts. See more info here https://nextjs.org/docs/messages/page-data-collection-timeout
+    at onRestart (C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\build\index.js:298:27)
+    at Worker.hasCustomGetInitialProps (C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\lib\worker.js:95:40)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+EXIT=1 

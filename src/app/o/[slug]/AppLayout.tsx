@@ -19,11 +19,15 @@ import AdminAttendancePanel from '../../admin-attendance-panel';
 import OrgSettingsPanel from '../../org-settings-panel';
 import UsersPage from './users/page';
 import NotificationBell from '../../notification-bell';
+import CalendarPanel from '../../calendar-panel';
+import AIAssistant from '../../ai-assistant';
+import { Moon, Sun } from '../../ui-icons';
+
 
 import {
   LayoutDashboard, MessageSquare, Bell, Activity, BookOpen,
   Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut, Menu, X,
-  KanbanSquare, UserRound, BarChart3, Building2, HelpCircle,
+  KanbanSquare, UserRound, BarChart3, Building2, HelpCircle, Calendar,
 } from '../../ui-icons';
 
 type User = {
@@ -47,6 +51,7 @@ type User = {
 const MEMBER_TABS = [
   { id: 'Dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'Tâches', label: 'Tâches', icon: KanbanSquare },
+  { id: 'Calendrier', label: 'Calendrier', icon: Calendar },
   { id: 'Pointage', label: 'Pointage', icon: Clock3 },
   { id: 'Messages', label: 'Messages', icon: MessageSquare },
   { id: 'Annonces', label: 'Annonces', icon: Bell },
@@ -77,6 +82,8 @@ export default function AppLayout({
   isPlatformSuperAdmin: boolean;
 }) {
   const [activePage, setActivePage] = useState('Dashboard');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => ((typeof window !== 'undefined' && (localStorage.getItem('mcf-theme') as any)) || 'light'));
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [branding, setBranding] = useState<{ name?: string | null; logoUrl?: string | null }>({});
 
@@ -91,9 +98,15 @@ export default function AppLayout({
           if (!cancelled) setBranding({ name: json.name, logoUrl: json.logoUrl });
         }
       } catch { /* silencieux : fallback sur le nom fourni par le contexte */ }
+
     })();
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('mcf-theme', theme);
+  }, [theme]);
 
   // Fermer le drawer avec la touche Échap
   useEffect(() => {
@@ -107,7 +120,7 @@ export default function AppLayout({
     setDrawerOpen(false);
   }
 
-  const ctx = { user, organization, organizationId, orgRole, isPlatformSuperAdmin };
+    const ctx = { user, organization, organizationId, orgRole, isPlatformSuperAdmin, onNavigate: goTo };
   const tabs = orgRole === 'ORGANIZATION_ADMIN' ? ADMIN_TABS : MEMBER_TABS;
 
   return (
@@ -120,7 +133,7 @@ export default function AppLayout({
           <span className="sidebar-brand" style={{ padding: '0 4px' }}>
             {branding.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={branding.logoUrl} alt="Logo de l’organisation" style={{ width: 34, height: 34, borderRadius: 9, objectFit: 'contain', background: '#fff', border: '1px solid var(--line)' }} />
+              <img src={branding.logoUrl} alt="Logo de l’organisation" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'contain', background: '#fff', border: '1px solid var(--line)', boxShadow: '0 1px 4px rgba(15,23,42,.08)' }} />
             ) : (
               <span className="brand-mark"><ShieldCheck size={16} /></span>
             )}
@@ -160,6 +173,10 @@ export default function AppLayout({
           <button className="menu-button" onClick={() => setDrawerOpen(true)} aria-label="Ouvrir le menu">
             <Menu size={20} />
           </button>
+          <button className="theme-toggle" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Basculer thème">
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            <span>{theme === 'dark' ? 'Clair' : 'Sombre'}</span>
+          </button>
           <div style={{ minWidth: 0 }}>
             <div className="topbar-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {branding.name ?? organization?.name ?? 'Mar-ci Flow'}
@@ -177,6 +194,8 @@ export default function AppLayout({
           {renderContent(activePage, ctx, goTo)}
         </main>
       </div>
+
+      <AIAssistant userName={`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()} isAdmin={orgRole === 'ORGANIZATION_ADMIN'} />
     </div>
   );
 }
@@ -225,6 +244,8 @@ function renderContent(
       return <Dashboard ctx={ctx} />;
     case 'Tâches':
       return <TasksPanel admin={ctx.orgRole === 'ORGANIZATION_ADMIN'} currentUserId={ctx.user.id} />;
+    case 'Calendrier':
+      return <CalendarPanel user={user as any} />;
     case 'Pointage':
       return <AttendancePanel />;
     case 'Messages':
@@ -242,7 +263,7 @@ function renderContent(
     case 'Profil':
       return <ProfilePanel />;
     case 'Aide':
-      return <HelpCenter />;
+      return <HelpCenter isAdmin={ctx.orgRole === 'ORGANIZATION_ADMIN'} />;
     case 'Rapports':
       return <ReportsPanel />;
     case 'Pointages':

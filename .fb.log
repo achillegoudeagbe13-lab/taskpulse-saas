@@ -1,0 +1,104 @@
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.16.2) to .\node_modules\@prisma\client in 45.23s
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+=== PRISMA_DONE EXITCODE=0 === 
+  ▲ Next.js 14.2.15
+  - Environments: .env
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\ADM\Desktop\taskpilse2\.next\cache\webpack\server-production\7.pack_' -> 'C:\Users\ADM\Desktop\taskpilse2\.next\cache\webpack\server-production\7.pack'
+ ⚠ Compiled with warnings
+
+./src/app/calendar-panel.tsx
+Attempted import error: 'ChevronLeft' is not exported from './ui-icons' (imported as 'ChevronLeft').
+
+Import trace for requested module:
+./src/app/calendar-panel.tsx
+./src/app/o/[slug]/AppLayout.tsx
+
+./src/app/calendar-panel.tsx
+Attempted import error: 'ChevronLeft' is not exported from './ui-icons' (imported as 'ChevronLeft').
+
+Import trace for requested module:
+./src/app/calendar-panel.tsx
+./src/app/o/[slug]/AppLayout.tsx
+
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+ ⚠ Sending SIGTERM signal to static worker due to timeout of 60 seconds. Subsequent errors may be a result of the worker exiting.
+ ⨯ Static worker exited with code: null and signal: SIGTERM
+ ⚠ Restarted collecting page data for /_app because it took more than 60 seconds
+ ⚠ See more info here https://nextjs.org/docs/messages/static-page-generation-timeout
+ ⚠ Restarted collecting page data for /_app because it took more than 60 seconds
+ ⚠ Sending SIGTERM signal to static worker due to timeout of 60 seconds. Subsequent errors may be a result of the worker exiting.
+ ⨯ Static worker exited with code: null and signal: SIGTERM
+ ⚠ Restarted collecting page data for /api/admin/reports because it took more than 60 seconds
+ ⚠ See more info here https://nextjs.org/docs/messages/static-page-generation-timeout
+ ⚠ Restarted collecting page data for /api/admin/settings because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/ai/chat because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/admin/audit because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/attendance because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/auth/logout because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/auth/me because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/announcements because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/activities because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/auth/login because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/admin/users because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/invitations because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/journal/attachments because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/admin/users/[id] because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/join because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/journal/actions because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/journal/report because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/admin/attendance because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/dashboard because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/notifications because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/branding because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/leaves because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/messages because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/journal because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/journal/export because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/calendar because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/platform/overview because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/meetings because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/register because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/tasks because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/profile because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/users because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /o/[slug] because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/switch because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /login because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /o/[slug]/users because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /register-org because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /rejoindre because it took more than 60 seconds
+ ⚠ Restarted collecting page data for / because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /_not-found because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/org/leaves/[id] because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /api/platform/orgs/[id] because it took more than 60 seconds
+ ⚠ Restarted collecting page data for /platform because it took more than 60 seconds
+ ⚠ Sending SIGTERM signal to static worker due to timeout of 60 seconds. Subsequent errors may be a result of the worker exiting.
+ ⨯ Static worker exited with code: null and signal: SIGTERM
+
+> Build error occurred
+Error: Collecting page data for /api/admin/reports is still timing out after 2 attempts. See more info here https://nextjs.org/docs/messages/page-data-collection-timeout
+    at onRestart (C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\build\index.js:298:27)
+    at Worker.isPageStatic (C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\lib\worker.js:95:40)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Span.traceAsyncFn (C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\trace\trace.js:154:20)
+    at async C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\build\index.js:1239:56
+    at async Span.traceAsyncFn (C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\trace\trace.js:154:20)
+    at async Promise.all (index 7)
+    at async C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\build\index.js:1171:17
+    at async Span.traceAsyncFn (C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\trace\trace.js:154:20)
+    at async C:\Users\ADM\Desktop\taskpilse2\node_modules\next\dist\build\index.js:1094:124
+=== BUILD_EXIT=1 === 

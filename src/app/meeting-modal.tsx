@@ -4,7 +4,6 @@ import { X, Calendar as CalendarIcon, Users } from './ui-icons';
 type Member = { id: string; name: string };
 
 export default function MeetingModal({ open, onClose, members }: { open: boolean; onClose: () => void; members: Member[] }) {
-  if (!open) return null;
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [start, setStart] = useState('');
@@ -15,6 +14,7 @@ export default function MeetingModal({ open, onClose, members }: { open: boolean
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  if (!open) return null;
 
   function toggle(id: string) { setSelected(selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id]); }
 

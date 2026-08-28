@@ -5,7 +5,6 @@ import { X } from './ui-icons';
 const TYPES = ['CONGE', 'RTT', 'MALADIE'];
 
 export default function LeaveModal({ open, onClose, userId }: { open: boolean; onClose: () => void; userId: string }) {
-  if (!open) return null;
   const [type, setType] = useState(TYPES[0]);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
@@ -13,6 +12,7 @@ export default function LeaveModal({ open, onClose, userId }: { open: boolean; o
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  if (!open) return null;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();

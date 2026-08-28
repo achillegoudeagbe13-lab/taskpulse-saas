@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock3, Search, MessageSquare, Settings, Trash2, Users, Send, UserRound } from '../../../ui-icons';
+import { Clock3, Search, MessageSquare, Settings, Trash2, Users, Send, UserRound, Key } from '../../../ui-icons';
 
 type MemberRow = {
   membershipId: string;
@@ -37,6 +37,33 @@ export default function UsersPage({
   const [supTarget, setSupTarget] = useState<MemberRow | null>(null);
   const [supData, setSupData] = useState<any>(null);
   const [supLoading, setSupLoading] = useState(false);
+  const [resetTarget, setResetTarget] = useState<MemberRow | null>(null);
+  const [resetSaving, setResetSaving] = useState(false);
+
+  async function submitResetPassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!resetTarget) return;
+    setError(''); 
+    const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
+    if ((data.newPassword ?? '').length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères.'); return; }
+    if (data.newPassword !== data.confirm) { setError('Les deux mots de passe ne correspondent pas.'); return; }
+    setResetSaving(true);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: resetTarget.user.id, newPassword: data.newPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Réinitialisation impossible.');
+      setNotice(`Mot de passe de ${resetTarget.user.firstName} réinitialisé. Ses sessions ont été déconnectées.`);
+      setResetTarget(null);
+    } catch (e2) {
+      setError((e2 as Error).message);
+    } finally {
+      setResetSaving(false);
+    }
+  }
 
   async function openSupervision(member: MemberRow) {
     setSupTarget(member); setSupData(null); setError(''); setNotice('');
@@ -188,18 +215,19 @@ export default function UsersPage({
                     </select>
                   </td>
                   <td className="p-3">{member.user.department || '—'}</td>
-                  <td className="p-3">
-                    <span className={'px-2 py-1 text-xs rounded ' + (member.user.status === 'ACTIF' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600')}>
+                                    <td>
+                    <span className={'status-pill ' + (member.user.status === 'ACTIF' ? 'active' : 'off')}>
                       {member.user.status === 'ACTIF' ? 'Actif' : member.user.status === 'SUSPENDU' ? 'Suspendu' : 'Inactif'}
                     </span>
                   </td>
-                  <td className="p-3">{new Date(member.joinedAt).toLocaleDateString('fr-FR')}</td>
-                  <td className="p-3">
-                    <div className="flex gap-2">
-                      <button className="p-1 text-gray-600 hover:text-indigo-600" title={'Historique de travail de ' + member.user.firstName} onClick={() => openSupervision(member)}><UserRound size={15} /></button>
-                      <button className="p-1 text-gray-600 hover:text-blue-600" title={'Message direct à ' + member.user.firstName} onClick={() => setMessageTarget(member)}><MessageSquare size={15} /></button>
-                      <button className="p-1 text-gray-600 hover:text-green-600" title={member.user.status === 'ACTIF' ? 'Suspendre' : 'Réactiver'} onClick={() => toggleStatus(member)}><Settings size={15} /></button>
-                      <button className="p-1 text-gray-600 hover:text-red-600" title="Retirer" onClick={() => removeFromOrg(member)}><Trash2 size={15} /></button>
+                  <td>{new Date(member.joinedAt).toLocaleDateString('fr-FR')}</td>
+                  <td>
+                    <div className="actions-row">
+                      <button className="icon-button" title={'Historique de travail de ' + member.user.firstName} onClick={() => openSupervision(member)}><UserRound size={15} /></button>
+                      <button className="icon-button" title={'Message direct à ' + member.user.firstName} onClick={() => setMessageTarget(member)}><MessageSquare size={15} /></button>
+                      <button className="icon-button" title={'Réinitialiser le mot de passe de ' + member.user.firstName} onClick={() => { setError(''); setResetTarget(member); }}><Key size={15} /></button>
+                      <button className="icon-button" title={member.user.status === 'ACTIF' ? 'Suspendre' : 'Réactiver'} onClick={() => toggleStatus(member)}><Settings size={15} /></button>
+                      <button className="icon-button danger" title="Retirer" onClick={() => removeFromOrg(member)}><Trash2 size={15} /></button>
                     </div>
                   </td>
                 </tr>
@@ -209,24 +237,51 @@ export default function UsersPage({
         </div>
       )}
 
-      {messageTarget && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <form className="bg-white p-6 rounded-xl shadow-xl w-96" onSubmit={sendDirectMessage} onClick={(e) => e.stopPropagation()}>
-            <button className="float-right text-gray-500 hover:text-gray-700" type="button" onClick={() => setMessageTarget(null)}>×</button>
-            <h2 className="text-lg font-bold">Message à {messageTarget.user.firstName} {messageTarget.user.lastName}</h2>
-            <p className="text-sm text-gray-500 mb-4">@{messageTarget.user.username}</p>
-            <textarea name="content" required maxLength={5000} placeholder="Votre message direct…" className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4" />
-            {messageError && <div className="mb-3 text-sm text-red-600">{messageError}</div>}
-            <div className="flex gap-3">
-              <button type="button" className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-100" onClick={() => setMessageTarget(null)}>Annuler</button>
-              <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"><Send size={16} /> Envoyer</button>
+      {resetTarget && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setResetTarget(null)}>
+          <div className="modal" style={{ maxWidth: 460 }}>
+            <div className="modal-header">
+              <h2>Réinitialiser le mot de passe</h2>
+              <button className="icon-button" onClick={() => setResetTarget(null)} aria-label="Fermer">×</button>
+            </div>
+            <form onSubmit={submitResetPassword} className="modal-body">
+              <p className="muted" style={{ marginTop: 0 }}>
+                Définissez un nouveau mot de passe pour <strong>{resetTarget.user.firstName} {resetTarget.user.lastName}</strong> ({resetTarget.user.email}).
+                Toutes ses sessions actives seront déconnectées.
+              </p>
+              <div className="form-row"><label>Nouveau mot de passe</label><input type="password" name="newPassword" required minLength={8} maxLength={128} autoComplete="new-password" placeholder="Au moins 8 caractères" /></div>
+              <div className="form-row"><label>Confirmer</label><input type="password" name="confirm" required minLength={8} autoComplete="new-password" placeholder="Répétez le mot de passe" /></div>
+              <div className="modal-footer">
+                <button type="button" className="secondary-button" onClick={() => setResetTarget(null)}>Annuler</button>
+                <button type="submit" className="primary-button" disabled={resetSaving}>{resetSaving ? 'Enregistrement…' : 'Réinitialiser'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+            {messageTarget && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setMessageTarget(null)}>
+          <form className="modal" style={{ maxWidth: 460 }} onSubmit={sendDirectMessage}>
+            <div className="modal-header">
+              <h2>Message à {messageTarget.user.firstName} {messageTarget.user.lastName}</h2>
+              <button className="icon-button" type="button" onClick={() => setMessageTarget(null)} aria-label="Fermer">×</button>
+            </div>
+            <div className="modal-body">
+              <p className="muted" style={{ marginTop: 0 }}>@{messageTarget.user.username}</p>
+              <div className="form-row"><label>Message</label><textarea name="content" required maxLength={5000} placeholder="Votre message direct…" rows={4} /></div>
+              {messageError && <div className="notice error">{messageError}</div>}
+              <div className="modal-footer">
+                <button type="button" className="secondary-button" onClick={() => setMessageTarget(null)}>Annuler</button>
+                <button type="submit" className="primary-button"><Send size={15} /> Envoyer</button>
+              </div>
             </div>
           </form>
         </div>
       )}
 
       {supTarget && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSupTarget(null)}>
+        <div className="modal-overlay" onClick={() => setSupTarget(null)}>
           <div className="supervision" style={{ width: 'min(880px,100%)', maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <div className="supervision-head">
               <UserRound size={20} style={{ color: 'var(--blue)' }} />

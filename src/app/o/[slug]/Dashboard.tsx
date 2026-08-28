@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BarChart3, Clock3, CheckCircle2, Send } from '../../ui-icons';
+import { BarChart3, Clock3, CheckCircle2, Send, Calendar, KanbanSquare, Bell } from '../../ui-icons';
 
 type DashboardData = {
   stats: {
@@ -15,6 +15,7 @@ type DashboardData = {
   };
   byDay: Array<{ label: string; tasks: number; activities: number }>;
   weekTasks: Array<{ id: string; title: string; status: string; priority: string }>;
+  upcomingTasks: Array<{ id: string; title: string; dueDate: string | null }>;
   latestAnnouncement: { title: string; content: string; author: string } | null;
   unreadNotifications: number;
 };
@@ -44,7 +45,30 @@ export default function Dashboard({ ctx }: { ctx: any }) {
           <p className="eyebrow">TABLEAU DE BORD</p>
           <h1>Bienvenue{ctx.user?.firstName ? ', ' + ctx.user.firstName : ''} !</h1>
         </div>
+        <div className="page-actions">
+          <button className="outline-button" onClick={() => ctx.onNavigate?.('Calendrier')}><Calendar size={16} /> Calendrier</button>
+          <button className="outline-button" onClick={() => ctx.onNavigate?.('Tâches')}><KanbanSquare size={16} /> Tâches</button>
+        </div>
         <BarChart3 size={32} className="panel-icon" />
+      </div>
+
+      {/* Résumé du jour : accès rapides */}
+      <div className="quick-grid">
+        <button className="quick-card" onClick={() => ctx.onNavigate?.('Calendrier')}>
+          <span className="quick-card-icon"><Calendar size={20} /></span>
+          <strong>Calendrier</strong>
+          <small>Vos échéances et réunions du jour</small>
+        </button>
+        <button className="quick-card" onClick={() => ctx.onNavigate?.('Pointage')}>
+          <span className="quick-card-icon"><Clock3 size={20} /></span>
+          <strong>Pointage</strong>
+          <small>Enregistrer votre arrivée / départ</small>
+        </button>
+        <button className="quick-card" onClick={() => ctx.onNavigate?.('Notifications')}>
+          <span className="quick-card-icon"><Bell size={20} /></span>
+          <strong>Notifications</strong>
+          <small>Alertes et rappels récents</small>
+        </button>
       </div>
 
       <section className="stats-grid">
@@ -53,6 +77,18 @@ export default function Dashboard({ ctx }: { ctx: any }) {
         <StatCard icon={<Clock3 size={24} />} label="Heures travaillées" value={data.stats.hours} />
         <StatCard icon={<Send size={24} />} label="Activités" value={data.stats.totalActivities} />
       </section>
+
+      {/* Indicateur de progression */}
+      {data.stats.totalTasks > 0 && (
+        <section className="panel dash-section">
+          <div className="panel-heading">
+            <h3>Progression globale</h3>
+            <strong>{Math.round((data.stats.completedTasks / data.stats.totalTasks) * 100)}%</strong>
+          </div>
+          <div className="progress-big"><b style={{ width: `${(data.stats.completedTasks / data.stats.totalTasks) * 100}%` }} /></div>
+          <p className="muted">{data.stats.completedTasks} tâches terminées sur {data.stats.totalTasks}</p>
+        </section>
+      )}
 
       {/* Carte Annonce de l'équipe */}
       {data.latestAnnouncement && (
@@ -63,6 +99,21 @@ export default function Dashboard({ ctx }: { ctx: any }) {
             <p>{data.latestAnnouncement.content}</p>
             <p style={{ marginBottom: 0 }}>Par {data.latestAnnouncement.author}</p>
           </a>
+        </section>
+      )}
+
+      {/* Tâches proches de l'échéance */}
+      {data.upcomingTasks && data.upcomingTasks.length > 0 && (
+        <section className="dash-section">
+          <h2>Échéances à venir</h2>
+          <ul className="dash-list">
+            {data.upcomingTasks.map((t) => (
+              <li key={t.id}>
+                <span>{t.title}</span>
+                <span className="due-soon"><Clock3 size={12} /> {t.dueDate && new Date(t.dueDate).toLocaleDateString('fr-FR')}</span>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

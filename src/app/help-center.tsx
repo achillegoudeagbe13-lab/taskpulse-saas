@@ -114,15 +114,15 @@ const employeeSections: Section[] = [
   },
 ];
 
-export default function HelpCenter() {
-  const [tab, setTab] = useState('admin');
+export default function HelpCenter({ isAdmin = false }: { isAdmin?: boolean }) {
+  const [tab, setTab] = useState(isAdmin ? 'admin' : 'employee');
   const sections = tab === 'admin' ? adminSections : employeeSections;
 
   return (
     <div className="section-page">
-      <div className="page-heading"><div><HelpCircle size={28} className="panel-icon" /><div><p className="eyebrow">CENTRE D’AIDE · GUIDE D’UTILISATION</p><h1>Mar-ci Flow — Guide d’utilisation</h1><p className="muted">Deux vues dédiées selon votre rôle.</p></div></div>
+      <div className="page-heading"><div><HelpCircle size={28} className="panel-icon" /><div><p className="eyebrow">CENTRE D’AIDE · GUIDE D’UTILISATION</p><h1>Mar-ci Flow — Guide d’utilisation</h1><p className="muted">{isAdmin ? 'Deux vues dédiées selon votre rôle.' : 'Votre guide d’utilisation en tant que membre de l’équipe.'}</p></div></div>
         <div className="help-tabs">
-          <button className={'tab-button' + (tab === 'admin' ? ' active' : '')} onClick={() => setTab('admin')}>👨‍💼 Guide Administrateur</button>
+          {isAdmin && <button className={'tab-button' + (tab === 'admin' ? ' active' : '')} onClick={() => setTab('admin')}>👨‍💼 Guide Administrateur</button>}
           <button className={'tab-button' + (tab === 'employee' ? ' active' : '')} onClick={() => setTab('employee')}>👤 Guide Employé</button>
         </div>
       </div>

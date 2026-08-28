@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { CheckCircle2, KanbanSquare, List, Plus, RefreshCw, UserRound } from './ui-icons';
+import { CheckCircle2, Download, KanbanSquare, List, Plus, RefreshCw, UserRound } from './ui-icons';
 
 type TaskStatus = 'TERMINE' | 'EN_COURS' | 'BLOQUE' | 'EN_ATTENTE';
 type Task = { id: string; title: string; description?: string | null; status: TaskStatus; priority: 'BASSE' | 'MOYENNE' | 'HAUTE'; progress: number; dueDate?: string | null; createdAt?: string; assignee?: { id: string; firstName: string; lastName: string } | null; creator?: { id: string; firstName: string; lastName: string } | null };
@@ -37,6 +37,7 @@ export default function TasksPanel({ admin, currentUserId }: { admin: boolean; c
     setLoading(true); setError('');
     try {
       const response = await fetch('/api/tasks');
+
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       setTasks(result.tasks);
@@ -45,6 +46,27 @@ export default function TasksPanel({ admin, currentUserId }: { admin: boolean; c
     } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
+
+  function exportTasksCsv() {
+    const rows = [
+      ['Titre', 'Statut', 'Priorité', 'Progression', 'Échéance', 'Assigné à'],
+      ...tasks.map((t) => [
+        t.title,
+        labels[t.status],
+        priorities[t.priority],
+        `${t.progress}%`,
+        t.dueDate ? new Date(t.dueDate).toLocaleDateString('fr-FR') : '',
+        t.assignee ? `${t.assignee.firstName} ${t.assignee.lastName}` : 'Générale',
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `mar-ci-flow-taches-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   function openCreate() { setCreating(true); setError(''); loadContacts(); }
 
@@ -88,6 +110,11 @@ export default function TasksPanel({ admin, currentUserId }: { admin: boolean; c
     setNotice('Tâche mise à jour.');
     load();
   }
+useEffect(() => {
+    if (creating || editing) document.body.classList.add('modal-open');
+    else document.body.classList.remove('modal-open');
+    return () => document.body.classList.remove('modal-open');
+  }, [creating, editing]);
   return (
     <div className="section-page">
       <div className="page-heading">
@@ -97,6 +124,7 @@ export default function TasksPanel({ admin, currentUserId }: { admin: boolean; c
           <p className="muted">Suivez les priorités et l’avancement du travail.</p>
         </div>
         <div className="page-actions">
+          <button className="outline-button" onClick={exportTasksCsv} title="Exporter en CSV"><Download size={16} /> Export CSV</button>
           <button className={view === 'list' ? 'icon-button active' : 'icon-button'} onClick={() => setView('list')} aria-label="Vue liste"><List size={18} /></button>
           <button className={view === 'kanban' ? 'icon-button active' : 'icon-button'} onClick={() => setView('kanban')} aria-label="Vue kanban"><KanbanSquare size={18} /></button>
           {admin && <button className="primary-button" onClick={openCreate}><Plus size={17} /> Créer une tâche</button>}
