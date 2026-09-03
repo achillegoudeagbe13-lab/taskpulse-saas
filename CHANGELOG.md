@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Erreur React #130 (« Objects are not valid as a React child ») : nouveau module `src/lib/render-safe.ts` avec helpers sûrs (`safeStr`, `safeDate`, `safeDateTime`, `safeDateLabel`, `safeTimeLabel`, `safeFullName`, `asArray`) appliqués sur l'ensemble des panneaux
+- **Échec de déploiement Render** (« Type error: Invalid value for '--ignoreDeprecations' ») :
+  - suppression de `baseUrl` (déprécié en TypeScript 6 — erreur TS5101) au profit de `paths` relatifs, résolus depuis le tsconfig (TS 5.0+ et Next.js 13.1+)
+  - suppression de `ignoreDeprecations` et `noUncheckedSideEffectImports`, dont l'acceptation varie selon la version de TypeScript résolue par Render
+  - ajout de `src/types/css.d.ts` (`declare module '*.css'`) pour l'import side-effect de `globals.css`, requis car `noUncheckedSideEffectImports` est actif par défaut en TypeScript 6 (erreur TS2882)
+  - épinglage strict de `typescript@6.0.3` dans `package.json` + resynchronisation du `package-lock.json` (suppression de la dérive `^5.6.3` / `^6.0.3`) pour une installation déterministe sur Render
+  - ajout de `engines.node >=18.18` (Next.js 14.2)
 - Défilement interne des modales amélioré (UX scroll)
 - Erreurs TypeScript corrigées (`tsconfig.tsbuildinfo` exclu du repo, options tsconfig ajustées)
 - Contrats de routes API alignés (`/api/org/calendar`, `/api/platform/orgs/[id]`)
@@ -21,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Validation
 - Build local validé : `Compiled successfully` + `Generating static pages (40/40)`
-- Commit : `8185140`
+- Type-check validé sur TypeScript 6.0.3 **et** 5.5.4 (compatibilité ascendante)
+- Commits : `8185140`, `fix(build)` déploiement Render
 
 
 ## [v6] - 2026-08-23
