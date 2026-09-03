@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Validation
 - Build local validé : `Compiled successfully` + `Generating static pages (40/40)`
 - Type-check validé sur TypeScript 6.0.3 **et** 5.5.4 (compatibilité ascendante)
-- Commits : `8185140`, `fix(build)` déploiement Render
+- Commits : `8185140` (fix rendering/UX) + `517c079` (fix déploiement Render)
+- Tag poussé : `v6.1`
 
 
 ## [v6] - 2026-08-23
