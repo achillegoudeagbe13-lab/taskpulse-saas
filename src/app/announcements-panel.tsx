@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { Bell, MessageSquare, Plus, RefreshCw, Send } from './ui-icons';
+import { safeStr, safeDateTime, safeFullName, asArray } from '../lib/render-safe';
 
 type Announcement = {
   id: string;
@@ -27,7 +28,7 @@ export default function AnnouncementsPanel({ admin }: { admin: boolean }) {
       const response = await fetch('/api/announcements');
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setItems(result.announcements);
+      setItems(asArray<Announcement>(result.announcements));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Impossible de charger les annonces.');
     } finally {
@@ -69,18 +70,18 @@ export default function AnnouncementsPanel({ admin }: { admin: boolean }) {
           {items.length === 0 ? (
             <div className="empty-state"><Bell size={24} /><h3>Aucune annonce</h3><p className="muted">Soyez le premier à partager une information.</p></div>
           ) : items.map((item) => (
-            <article className="panel announcement-card" key={item.id}>
+            <article className="panel announcement-card" key={safeStr(item.id)}>
               <div className="activity-card-head">
-                <span className="avatar">{item.author.firstName[0]}{item.author.lastName[0]}</span>
-                <div><strong>{item.author.firstName} {item.author.lastName}</strong><small>{new Date(item.createdAt).toLocaleString('fr-FR')}</small></div>
+                <span className="avatar">{safeStr(item.author?.firstName).charAt(0)}{safeStr(item.author?.lastName).charAt(0) || '?'}</span>
+                <div><strong>{safeFullName(item.author)}</strong><small>{safeDateTime(item.createdAt)}</small></div>
                 <span className="table-badge">Annonce</span>
               </div>
-              <h3>{item.title}</h3>
-              <p>{item.content}</p>
+              <h3>{safeStr(item.title)}</h3>
+              <p>{safeStr(item.content)}</p>
               <div className="activity-card-foot">
-                <span><MessageSquare size={14} /> {item.comments.length} commentaire{item.comments.length > 1 ? 's' : ''}</span>
+                <span><MessageSquare size={14} /> {asArray(item.comments).length} commentaire{asArray(item.comments).length > 1 ? 's' : ''}</span>
                 <span>·</span>
-                <span>{item._count.reactions} réaction{item._count.reactions > 1 ? 's' : ''}</span>
+                <span>{item._count?.reactions ?? 0} réaction{item._count?.reactions && item._count.reactions > 1 ? 's' : ''}</span>
               </div>
             </article>
           ))}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { BarChart3, Clock3, CheckCircle2, Send, Calendar, KanbanSquare, Bell } from '../../ui-icons';
+import { safeStr, safeDateLabel, asArray } from '../../../lib/render-safe';
 
 type DashboardData = {
   stats: {
@@ -95,22 +96,22 @@ export default function Dashboard({ ctx }: { ctx: any }) {
         <section className="dash-section">
           <a href="#" className="dash-announce" onClick={(e) => e.preventDefault()}>
             <p className="eyebrow">📢 ANNONCE DE L’ÉQUIPE</p>
-            <h3>{data.latestAnnouncement.title}</h3>
-            <p>{data.latestAnnouncement.content}</p>
-            <p style={{ marginBottom: 0 }}>Par {data.latestAnnouncement.author}</p>
+            <h3>{safeStr(data.latestAnnouncement.title)}</h3>
+            <p>{safeStr(data.latestAnnouncement.content)}</p>
+            <p style={{ marginBottom: 0 }}>Par {safeStr(data.latestAnnouncement.author)}</p>
           </a>
         </section>
       )}
 
       {/* Tâches proches de l'échéance */}
-      {data.upcomingTasks && data.upcomingTasks.length > 0 && (
+      {asArray(data.upcomingTasks).length > 0 && (
         <section className="dash-section">
           <h2>Échéances à venir</h2>
           <ul className="dash-list">
-            {data.upcomingTasks.map((t) => (
-              <li key={t.id}>
-                <span>{t.title}</span>
-                <span className="due-soon"><Clock3 size={12} /> {t.dueDate && new Date(t.dueDate).toLocaleDateString('fr-FR')}</span>
+            {asArray<{ id: string; title: string; dueDate: string | null }>(data.upcomingTasks).map((t) => (
+              <li key={safeStr(t.id)}>
+                <span>{safeStr(t.title)}</span>
+                <span className="due-soon"><Clock3 size={12} /> {t.dueDate ? safeDateLabel(t.dueDate) : ''}</span>
               </li>
             ))}
           </ul>
@@ -118,19 +119,19 @@ export default function Dashboard({ ctx }: { ctx: any }) {
       )}
 
       {/* Tâches de la semaine */}
-      {data.weekTasks && data.weekTasks.length > 0 && (
+      {asArray(data.weekTasks).length > 0 && (
         <section className="dash-section">
           <h2>Tâches de la semaine</h2>
           <ul className="dash-list">
-            {data.weekTasks.map((t) => (
-              <li key={t.id}>
-                <span>{t.title}</span>
+            {asArray<{ id: string; title: string; status: string; priority: string }>(data.weekTasks).map((t) => (
+              <li key={safeStr(t.id)}>
+                <span>{safeStr(t.title)}</span>
                 <span className={'status-badge ' + (
                   t.status === 'TERMINE' ? 'termine' :
                   t.status === 'EN_COURS' ? 'en_cours' :
                   t.status === 'BLOQUE' ? 'bloque' : 'en_attente'
                 )}>
-                  {t.status === 'TERMINE' ? 'Terminée' : t.status === 'EN_COURS' ? 'En cours' : t.status === 'BLOQUE' ? 'Bloquée' : 'En attente'}
+                  {safeStr(t.status === 'TERMINE' ? 'Terminée' : t.status === 'EN_COURS' ? 'En cours' : t.status === 'BLOQUE' ? 'Bloquée' : 'En attente')}
                 </span>
               </li>
             ))}
@@ -139,15 +140,15 @@ export default function Dashboard({ ctx }: { ctx: any }) {
       )}
 
       {/* Graphique par jour */}
-      {data.byDay && data.byDay.length > 0 && (
+      {asArray(data.byDay).length > 0 && (
         <section className="dash-section">
           <h2>Activité par jour</h2>
           <div className="chart-mini">
-            {data.byDay.map((d) => (
-              <div key={d.label} className="cell">
-                <small>{d.label}</small>
-                <strong>{d.tasks}</strong>
-                <em>{d.activities} act.</em>
+            {asArray<{ label: string; tasks: number; activities: number }>(data.byDay).map((d) => (
+              <div key={safeStr(d.label)} className="cell">
+                <small>{safeStr(d.label)}</small>
+                <strong>{safeStr(d.tasks)}</strong>
+                <em>{safeStr(d.activities)} act.</em>
               </div>
             ))}
           </div>

@@ -15,6 +15,64 @@ function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDat
 function sameDay(a: Date, b: Date) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
 function startOfWeek(d: Date) { const s = new Date(d); s.setDate(s.getDate() - s.getDay()); s.setHours(0, 0, 0, 0); return s; }
 
+/**
+ * Sécurité du rendu React (évite l'erreur #130 « Objects are not valid as a React child ») :
+ * convertit n'importe quelle valeur en chaîne, même si elle est null, undefined ou un objet brut.
+ */
+function safeStr(value: unknown, fallback = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') return String(value);
+  if (value instanceof Date) return isNaN(value.getTime()) ? fallback : value.toISOString();
+  if (Array.isArray(value)) return value.map((v) => safeStr(v)).filter(Boolean).join(', ');
+  try { return String(value); } catch { return fallback; }
+}
+
+/** Construit une Date valide depuis n'importe quelle entrée, ou null si invalide. */
+function safeDate(value: unknown): Date | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+  try {
+    const parsed = new Date(typeof value === 'string' || typeof value === 'number' ? (value as string | number) : String(value));
+    return isNaN(parsed.getTime()) ? null : parsed;
+  } catch { return null; }
+}
+
+/** Heure locale 'HH:MM' sûre : renvoie '' si la date est absente/invalide. */
+function safeTime(value: unknown): string {
+  const date = safeDate(value);
+  if (!date) return '';
+  try { return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
+}
+
+/** Date locale sûre : renvoie le fallback si la date est absente/invalide. */
+function safeDateLabel(value: unknown, fallback = ''): string {
+  const date = safeDate(value);
+  if (!date) return fallback;
+  try { return date.toLocaleDateString('fr-FR'); } catch { return fallback; }
+}
+
+/** Normalise un évènement venu de l'API : garantit des chaînes et des dates exploitables. */
+function normalizeEvent(raw: any): CalEvent | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const type = safeStr(raw.type) as CalEvent['type'];
+  if (!(['task', 'meeting', 'leave'] as CalEvent['type'][]).includes(type)) return null;
+  const start = safeDate(raw.startAt);
+  if (!start) return null; // date de début absente/invalide → on ignore plutôt que de planter le rendu
+  const userName = raw.user && typeof raw.user === 'object' ? safeStr((raw.user as { name?: unknown }).name) : '';
+  const normalized: CalEvent = {
+    id: safeStr(raw.id),
+    type,
+    title: safeStr(raw.title, 'Événement'),
+    startAt: start.toISOString(),
+    endAt: safeDate(raw.endAt)?.toISOString() ?? null,
+    color: safeStr(raw.color, '#3b82f6'),
+    allDay: raw.allDay === true,
+    user: userName ? { name: userName } : undefined,
+  };
+  return normalized;
+}
+
 export default function CalendarPanel({ user }: { user: any }) {
   const [mode, setMode] = useState<Mode>('month');
   const [current, setCurrent] = useState(new Date());
@@ -31,7 +89,13 @@ export default function CalendarPanel({ user }: { user: any }) {
     const from = addDays(current, -90); const to = addDays(current, 90);
     fetch(`/api/org/calendar?start=${from.toISOString()}&end=${to.toISOString()}`)
       .then((r) => r.json())
-      .then((json) => { if (!cancelled) { setEvents(json.events ?? []); setMembers(json.members ?? []); } })
+      .then((json) => {
+        if (cancelled) return;
+        const rawEvents = Array.isArray(json?.events) ? json.events : [];
+        const rawMembers = Array.isArray(json?.members) ? json.members : [];
+        setEvents(rawEvents.map((raw: any) => normalizeEvent(raw)).filter((e: CalEvent | null): e is CalEvent => e !== null));
+        setMembers(rawMembers.map((m: any) => ({ id: safeStr(m?.id), name: safeStr(m?.name, 'Membre') })).filter((m: { id: string; name: string }) => m.id !== ''));
+      })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -48,7 +112,11 @@ export default function CalendarPanel({ user }: { user: any }) {
     const memberName = memberId === 'all' ? null : members.find((m) => m.id === memberId)?.name ?? null;
     return {
       day,
-      items: events.filter((e) => inTypes.includes(e.type) && sameDay(new Date(e.startAt), day) && (memberId === 'all' || (memberName && e.user?.name === memberName))).sort((a, b) => (a.startAt < b.startAt ? -1 : 1)),
+      items: events.filter((e) => {
+        const start = safeDate(e.startAt);
+        if (!start) return false;
+        return inTypes.includes(e.type) && sameDay(start, day) && (memberId === 'all' || (memberName && e.user?.name === memberName));
+      }).sort((a, b) => (safeStr(a.startAt) < safeStr(b.startAt) ? -1 : 1)),
     };
   }), [days, events, types, memberId, members]);
 
@@ -64,9 +132,13 @@ export default function CalendarPanel({ user }: { user: any }) {
       </div>
       {filterOpen && (
         <div className="calendar-filters">
-          <div className="filter-group"><span>Type d’événement</span>{(['task', 'meeting', 'leave'] as CalEvent['type'][]).map((t) => <label key={t}><input type="checkbox" checked={types[t]} onChange={(e) => setTypes({ ...types, [t]: e.target.checked })} /> {TYPE_LABELS[t]}</label>)}</div>
-          <div className="filter-group"><span>Membre</span><select value={memberId} onChange={(e) => setMemberId(e.target.value as any)}><option value="all">Toute l’équipe</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
+          <button type="button" className="calendar-filters-close" onClick={() => setFilterOpen(false)} aria-label="Fermer les filtres" title="Fermer">×</button>
+          <div className="filter-group"><span>Type d’événement</span>{(['task', 'meeting', 'leave'] as CalEvent['type'][]).map((t) => <label key={t}><input type="checkbox" checked={types[t] ?? true} onChange={(event) => setTypes({ ...types, [t]: event.target.checked })} /> {TYPE_LABELS[t]}</label>)}</div>
+          <div className="filter-group"><span>Membre</span><select value={memberId} onChange={(event) => setMemberId(event.target.value as any)}><option value="all">Toute l’équipe</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
         </div>
+      )}
+      {!loading && events.length === 0 && (
+        <div className="empty-state calendar-empty"><CalendarIcon size={22} /><h3>Aucun événement sur la période</h3><p className="muted">Les tâches, réunions et congés à venir apparaîtront ici.</p></div>
       )}
       <section className="calendar-grid">{mode === 'month' && <div className="weekday">{['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d) => <span key={d}>{d}</span>)}</div>}
         {visible.map(({ day, items }) => (
@@ -75,10 +147,10 @@ export default function CalendarPanel({ user }: { user: any }) {
             {items.length > 0 && (
               <div className="calendar-items">
                 {items.slice(0, mode === 'month' ? 3 : 10).map((e) => (
-                  <div key={e.id} className={'calendar-event ev-' + e.type} style={{ borderLeftColor: e.color }} title={`${TYPE_LABELS[e.type]} · ${e.title}${e.user?.name ? ' — ' + e.user.name : ''}`}>
-                    {!e.allDay && <span className="ev-time">{new Date(e.startAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
-                    <span className="ev-title">{e.title}</span>
-                    {e.user?.name && mode !== 'month' && <span className="ev-user">{e.user.name}</span>}
+                  <div key={safeStr(e.id) || safeStr(e.startAt)} className={'calendar-event ev-' + safeStr(e.type)} style={{ borderLeftColor: safeStr(e.color, '#3b82f6') }} title={`${TYPE_LABELS[e.type] ?? 'Événement'} · ${safeStr(e.title)}${e.user?.name ? ' — ' + e.user.name : ''}`}>
+                    {!e.allDay && <span className="ev-time">{safeTime(e.startAt)}</span>}
+                    <span className="ev-title">{safeStr(e.title)}</span>
+                    {e.user?.name && mode !== 'month' && <span className="ev-user">{safeStr(e.user.name)}</span>}
                   </div>
                 ))}
                 {mode === 'month' && items.length > 3 && <span className="ev-more">+{items.length - 3} autre(s)</span>}

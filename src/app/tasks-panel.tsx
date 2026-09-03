@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { CheckCircle2, Download, KanbanSquare, List, Plus, RefreshCw, UserRound } from './ui-icons';
+import { safeStr, asArray } from '../lib/render-safe';
 
 type TaskStatus = 'TERMINE' | 'EN_COURS' | 'BLOQUE' | 'EN_ATTENTE';
 type Task = { id: string; title: string; description?: string | null; status: TaskStatus; priority: 'BASSE' | 'MOYENNE' | 'HAUTE'; progress: number; dueDate?: string | null; createdAt?: string; assignee?: { id: string; firstName: string; lastName: string } | null; creator?: { id: string; firstName: string; lastName: string } | null };
@@ -12,15 +13,15 @@ const priorities: Record<Task['priority'], string> = { BASSE: 'Basse', MOYENNE: 
 
 /** Statut dynamique : tâche ouverte à tous, attribuée, ou « Tâche de X commencée par Y ». */
 function origin(task: Task): { text: string; kind: 'open' | 'started' | 'assigned' } {
-  if (!task.assignee) return { text: task.creator ? `Disponible pour tous · créée par ${task.creator.firstName} ${task.creator.lastName}` : 'Disponible pour tous', kind: 'open' };
+  if (!task.assignee) return { text: task.creator ? `Disponible pour tous · créée par ${safeStr(task.creator.firstName)} ${safeStr(task.creator.lastName)}` : 'Disponible pour tous', kind: 'open' };
   if (task.creator && task.creator.id !== task.assignee.id) {
-    const by = `${task.creator.firstName} ${task.creator.lastName}`;
-    const who = `${task.assignee.firstName} ${task.assignee.lastName}`;
+    const by = `${safeStr(task.creator.firstName)} ${safeStr(task.creator.lastName)}`;
+    const who = `${safeStr(task.assignee.firstName)} ${safeStr(task.assignee.lastName)}`;
     return task.status === 'EN_ATTENTE'
       ? { text: `Créée par ${by} · attribuée à ${who}`, kind: 'assigned' }
       : { text: `Tâche de ${by} commencée par ${who}`, kind: 'started' };
   }
-  return { text: `${task.assignee.firstName} ${task.assignee.lastName}`, kind: 'assigned' };
+  return { text: `${safeStr(task.assignee.firstName)} ${safeStr(task.assignee.lastName)}`, kind: 'assigned' };
 }
 
 export default function TasksPanel({ admin, currentUserId }: { admin: boolean; currentUserId: string }) {
@@ -40,7 +41,7 @@ export default function TasksPanel({ admin, currentUserId }: { admin: boolean; c
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setTasks(result.tasks);
+      setTasks(asArray<Task>(result.tasks));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Impossible de charger les tâches.');
     } finally { setLoading(false); }
@@ -150,16 +151,16 @@ useEffect(() => {
                       {tasks.map((task) => {
                         const state = origin(task);
                         return (
-                          <tr key={task.id} onClick={() => setEditing(task)}>
+                          <tr key={safeStr(task.id)} onClick={() => setEditing(task)}>
                             <td>
-                              <strong>{task.title}</strong>
-                              <small>{task.description || 'Sans description'}</small>
+                              <strong>{safeStr(task.title)}</strong>
+                              <small>{safeStr(task.description) || 'Sans description'}</small>
                               <span className={`task-origin ${state.kind}`}>{state.text}</span>
                             </td>
-                            <td>{task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : <span className="muted">Ouverte à tous</span>}</td>
-                            <td>{priorities[task.priority]}</td>
-                            <td><span className={`status-badge ${task.status.toLowerCase()}`}>{labels[task.status]}</span></td>
-                            <td><div className="table-progress"><span>{task.progress}%</span><i><b style={{ width: `${task.progress}%` }} /></i></div></td>
+                            <td>{task.assignee ? `${safeStr(task.assignee.firstName)} ${safeStr(task.assignee.lastName)}` : <span className="muted">Ouverte à tous</span>}</td>
+                            <td>{safeStr(priorities[task.priority] ?? task.priority)}</td>
+                            <td><span className={`status-badge ${safeStr(task.status).toLowerCase()}`}>{safeStr(labels[task.status] ?? task.status)}</span></td>
+                            <td><div className="table-progress"><span>{safeStr(task.progress)}%</span><i><b style={{ width: `${safeStr(task.progress)}%` }} /></i></div></td>
                             {!admin && (
                               <td>
                                 {!task.assignee && task.status !== 'TERMINE' && (
@@ -198,7 +199,7 @@ useEffect(() => {
                 <label>Titre<input name="title" required maxLength={160} placeholder="Ex. : Préparer le rapport mensuel" /></label>
                 <label>Description<textarea name="description" maxLength={4000} placeholder="Décrivez la tâche (optionnel)" /></label>
                 <div className="two-col">
-                  <label>Assigner à<select name="assigneeId" defaultValue=""><option value="">Disponible pour tous</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.firstName} {contact.lastName}{contact.department ? ` · ${contact.department}` : ''}</option>)}</select></label>
+                  <label>Assigner à<select name="assigneeId" defaultValue=""><option value="">Disponible pour tous</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{safeStr(contact.firstName)} {safeStr(contact.lastName)}{safeStr(contact.department) ? ` · ${safeStr(contact.department)}` : ''}</option>)}</select></label>
                   <label>Priorité<select name="priority" defaultValue="MOYENNE"><option value="BASSE">Basse</option><option value="MOYENNE">Moyenne</option><option value="HAUTE">Haute</option></select></label>
                 </div>
                 <div className="two-col">
@@ -219,7 +220,7 @@ useEffect(() => {
               <form className="modal panel" onSubmit={updateTask} onClick={(event) => event.stopPropagation()}>
                 <button type="button" className="modal-close" onClick={() => setEditing(null)}>×</button>
                 <p className="eyebrow">{origin(editing).kind === 'started' ? 'TÂCHE COMMENCÉE' : 'MISE À JOUR'}</p>
-                <h2>{editing.title}</h2>
+                <h2>{safeStr(editing.title)}</h2>
                 <p className="muted">{origin(editing).text}</p>
                 <label>Statut<select name="status" defaultValue={editing.status}><option value="EN_ATTENTE">À faire</option><option value="EN_COURS">En cours</option><option value="BLOQUE">Bloquée</option><option value="TERMINE">Terminée</option></select></label>
                 <label>Avancement<select name="progress" defaultValue={String(editing.progress)}><option value="0">0 %</option><option value="25">25 %</option><option value="50">50 %</option><option value="75">75 %</option><option value="100">100 %</option></select></label>
@@ -241,13 +242,13 @@ function TaskCard({ task, canClaim, onEdit, onClaim }: { task: Task; canClaim: b
   const state = origin(task);
   return (
     <div className="kanban-card" onClick={() => onEdit(task)} role="button" tabIndex={0}>
-      <strong>{task.title}</strong>
-      <small>{task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Ouverte à tous'}</small>
+      <strong>{safeStr(task.title)}</strong>
+      <small>{task.assignee ? `${safeStr(task.assignee.firstName)} ${safeStr(task.assignee.lastName)}` : 'Ouverte à tous'}</small>
       <span className={`task-origin ${state.kind}`}>{state.text}</span>
       {canClaim && !task.assignee && task.status !== 'TERMINE' && (
         <button className="claim-button" onClick={(event) => { event.stopPropagation(); onClaim(task); }}><UserRound size={14} /> Prendre en charge</button>
       )}
-      <div className="table-progress"><span>{task.progress}%</span><i><b style={{ width: `${task.progress}%` }} /></i></div>
+      <div className="table-progress"><span>{safeStr(task.progress)}%</span><i><b style={{ width: `${safeStr(task.progress)}%` }} /></i></div>
     </div>
   );
 }

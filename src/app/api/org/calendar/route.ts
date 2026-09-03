@@ -55,7 +55,7 @@ export async function GET(request: Request) {
   for (const m of meetings) {
     const inRange = (!startGte || m.endAt > startGte) && (!endLt || m.startAt < endLt);
     if (!inRange) continue;
-    events.push({ id: `meeting_${m.id}`, type: 'meeting', title: m.title, description: m.description, startAt: m.startAt.toISOString(), endAt: m.endAt.toISOString(), color: '#8b5cf6', allDay: false });
+    events.push({ id: `meeting_${m.id}`, type: 'meeting', title: m.title, description: m.description ?? undefined, startAt: m.startAt.toISOString(), endAt: m.endAt.toISOString(), color: '#8b5cf6', allDay: false });
   }
 
   // c) Congés / absences approuvée.

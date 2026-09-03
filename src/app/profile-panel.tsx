@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { UserRound, RefreshCw } from './ui-icons';
+import { safeStr, safeDateLabel, safeDateTime } from '../lib/render-safe';
 
 type Me = {
   id: string; firstName: string | null; lastName: string | null;
@@ -73,10 +74,10 @@ export default function ProfilePanel() {
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="panel-heading"><h3>Informations du compte</h3><span className={'status-badge ' + (me.status === 'ACTIF' ? 'active' : 'bloque')}>{me.status === 'ACTIF' ? '● Compte actif' : '● ' + me.status}</span></div>
         <div className="profile-facts">
-          <div><small>Rôle dans l’organisation</small><strong>{roleLabels[me.role ?? ''] ?? me.role ?? '—'}</strong></div>
-          <div><small>Département</small><strong>{me.department || '—'}</strong></div>
-          <div><small>Membre depuis</small><strong>{new Date(me.createdAt).toLocaleDateString('fr-FR')}</strong></div>
-          <div><small>Dernière connexion</small><strong>{me.lastLoginAt ? new Date(me.lastLoginAt).toLocaleString('fr-FR') : '—'}</strong></div>
+          <div><small>Rôle dans l’organisation</small><strong>{safeStr(roleLabels[me.role ?? ''] ?? me.role) || '—'}</strong></div>
+          <div><small>Département</small><strong>{safeStr(me.department) || '—'}</strong></div>
+          <div><small>Membre depuis</small><strong>{safeDateLabel(me.createdAt)}</strong></div>
+          <div><small>Dernière connexion</small><strong>{me.lastLoginAt ? safeDateTime(me.lastLoginAt) : '—'}</strong></div>
         </div>
       </section>
 

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { CheckCircle2, Pencil, Plus, RefreshCw } from './ui-icons';
+import { safeStr, safeDateTime, safeFullName, asArray } from '../lib/render-safe';
 
 type ActivityStatus = 'TERMINE' | 'EN_COURS' | 'BLOQUE';
 type Activity = { id: string; title: string; content: string; status: ActivityStatus; createdAt: string; userId: string; user: { firstName: string; lastName: string; username: string; photoUrl?: string | null } };
@@ -23,7 +24,7 @@ export default function ActivitiesPanel({ currentUserId }: { currentUserId: stri
       const response = await fetch('/api/activities');
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setActivities(result.activities);
+      setActivities(asArray<Activity>(result.activities));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Impossible de charger les activités.');
     } finally {
@@ -91,14 +92,14 @@ export default function ActivitiesPanel({ currentUserId }: { currentUserId: stri
           ) : activities.map((activity) => {
             const mine = activity.userId === currentUserId;
             return (
-              <article className="panel activity-card" key={activity.id}>
+              <article className="panel activity-card" key={safeStr(activity.id)}>
                 <div className="activity-card-head">
-                  <span className="avatar">{activity.user.firstName[0]}{activity.user.lastName[0]}</span>
-                  <div><strong>{activity.user.firstName} {activity.user.lastName}</strong><small>{new Date(activity.createdAt).toLocaleString('fr-FR')}</small></div>
-                  <span className={`status-badge ${activity.status.toLowerCase()}`}>{statusLabels[activity.status]}</span>
+                  <span className="avatar">{safeStr(activity.user?.firstName).charAt(0)}{safeStr(activity.user?.lastName).charAt(0) || '?'}</span>
+                  <div><strong>{safeFullName(activity.user)}</strong><small>{safeDateTime(activity.createdAt)}</small></div>
+                  <span className={`status-badge ${safeStr(activity.status).toLowerCase()}`}>{safeStr(statusLabels[activity.status] ?? activity.status)}</span>
                 </div>
-                <h3>{activity.title}</h3>
-                <p>{activity.content}</p>
+                <h3>{safeStr(activity.title)}</h3>
+                <p>{safeStr(activity.content)}</p>
                 {mine && (
                   <div className="activity-card-foot">
                     <button className="link-button" onClick={() => { setEditing(activity); setFormError(''); }}><Pencil size={14} /> Modifier</button>

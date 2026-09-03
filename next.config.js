@@ -2,8 +2,9 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Vérification TypeScript réactivée : toutes les erreurs de type sont corrigées (tsc --noEmit => 0 erreur).
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: true,

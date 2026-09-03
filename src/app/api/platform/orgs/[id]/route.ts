@@ -56,7 +56,7 @@ export async function GET(request: Request, { params }: Params) {
       announcements,
       messages,
       journalEntries,
-      invitationsPending,
+      invitationsPending: pendingInvitations,
       attendancesToday,
     },
   });

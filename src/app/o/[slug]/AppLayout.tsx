@@ -17,7 +17,7 @@ import ReportsPanel from '../../reports-panel';
 import HelpCenter from '../../help-center';
 import AdminAttendancePanel from '../../admin-attendance-panel';
 import OrgSettingsPanel from '../../org-settings-panel';
-import UsersPage from './users/page';
+import UsersPanel from './users/UsersPanel';
 import NotificationBell from '../../notification-bell';
 import CalendarPanel from '../../calendar-panel';
 import AIAssistant from '../../ai-assistant';
@@ -275,7 +275,7 @@ function renderContent(
     case 'Invitations':
       return <InvitationsPanel />;
     case 'Utilisateurs':
-      return <UsersPage onNavigation={setPage} ctx={{ orgRole: ctx.orgRole, organization: ctx.organization }} />;
+      return <UsersPanel onNavigation={setPage} ctx={{ orgRole: ctx.orgRole, organization: ctx.organization }} />;
     default:
       return <div>Page inconnue</div>;
   }

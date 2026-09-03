@@ -2,13 +2,20 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Clock3 } from './ui-icons';
+import { safeStr, safeDate, asArray } from '../lib/render-safe';
 
 type Record_ = { id: string; clockIn: string; clockOut: string | null; user: { name: string; username: string } };
 
-function fmt(dateIso: string) { return new Date(dateIso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }); }
-function duration(clockIn: string, clockOut: string | null) {
-  if (!clockOut) return '—';
-  const minutes = Math.max(0, Math.round((new Date(clockOut).getTime() - new Date(clockIn).getTime()) / 60000));
+function fmt(dateIso: unknown) {
+  const d = safeDate(dateIso);
+  if (!d) return '—';
+  try { return d.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }); } catch { return '—'; }
+}
+function duration(clockIn: unknown, clockOut: unknown) {
+  const out = safeDate(clockOut);
+  const inDate = safeDate(clockIn);
+  if (!out || !inDate) return '—';
+  const minutes = Math.max(0, Math.round((out.getTime() - inDate.getTime()) / 60000));
   return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
 }
 
@@ -23,7 +30,7 @@ export default function AdminAttendancePanel() {
       const res = await fetch('/api/admin/attendance?limit=200', { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Chargement impossible.');
-      setRecords(json.records ?? []);
+      setRecords(asArray<Record_>(json.records));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur de chargement.');
     } finally { setLoading(false); }
@@ -56,7 +63,7 @@ export default function AdminAttendancePanel() {
               <tbody>
                 {records.map((record) => (
                   <tr key={record.id}>
-                    <td><strong>{record.user.name}</strong><small>@{record.user.username}</small></td>
+                    <td><strong>{safeStr(record.user?.name)}</strong><small>@{safeStr(record.user?.username)}</small></td>
                     <td style={{ whiteSpace: 'nowrap' }}>{fmt(record.clockIn)}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>{record.clockOut ? fmt(record.clockOut) : <span className="status-badge en_cours">● En journée</span>}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>{duration(record.clockIn, record.clockOut)}</td>

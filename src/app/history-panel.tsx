@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Activity, BookOpen, CheckCircle2, Clock3, MessageSquare, Plus, RefreshCw, Send } from './ui-icons';
+import { safeStr, safeDateTime, safeDate, safeFullName, asArray } from '../lib/render-safe';
 
 type HistoryItem = { id: string; kind: string; title: string; meta: string; date: string };
 
@@ -37,13 +38,13 @@ export default function HistoryPanel() {
         throw new Error(journal.error || activities.error || tasks.error || 'Impossible de charger l’historique.');
       }
       const merged: HistoryItem[] = [
-        ...(journal.entries || []).map((entry: { id: string; entryDate: string; title: string; status: string; category: { name: string } }) => ({ id: `j-${entry.id}`, date: entry.entryDate, kind: 'journal' as const, title: entry.title, meta: `${entry.category.name} · ${entry.status}` })),
-        ...(activities.activities || []).map((activity: any) => ({ id: `a-${activity.id}`, date: activity.createdAt, kind: 'activity' as const, title: activity.title, meta: activity.status })),
-        ...(tasks.tasks || []).map((task: any) => ({ id: `t-${task.id}`, date: task.createdAt, kind: 'task' as const, title: task.title, meta: `Avancement ${task.progress}%` })),
-        ...(attendance.records || []).map((record: any) => ({ id: `p-${record.id}`, date: record.clockIn, kind: 'attendance' as const, title: 'Pointage', meta: record.clockOut ? 'Journée complète' : 'Arrivée pointée' })),
-        ...(messages.messages || []).map((message: any) => ({ id: `m-${message.id}`, date: message.createdAt, kind: 'message' as const, title: message.content, meta: message.sender ? `De ${message.sender.firstName} ${message.sender.lastName}` : '' })),
+        ...asArray(journal.entries).map((entry: any) => ({ id: `j-${safeStr(entry.id)}`, date: safeStr(entry.entryDate), kind: 'journal' as const, title: safeStr(entry.title, 'Entrée de journal'), meta: `${safeStr(entry.category?.name)} · ${safeStr(entry.status)}` })),
+        ...asArray(activities.activities).map((activity: any) => ({ id: `a-${safeStr(activity.id)}`, date: safeStr(activity.createdAt), kind: 'activity' as const, title: safeStr(activity.title, 'Activité'), meta: safeStr(activity.status) })),
+        ...asArray(tasks.tasks).map((task: any) => ({ id: `t-${safeStr(task.id)}`, date: safeStr(task.createdAt), kind: 'task' as const, title: safeStr(task.title, 'Tâche'), meta: `Avancement ${safeStr(task.progress)}%` })),
+        ...asArray(attendance.records).map((record: any) => ({ id: `p-${safeStr(record.id)}`, date: safeStr(record.clockIn), kind: 'attendance' as const, title: 'Pointage', meta: record.clockOut ? 'Journée complète' : 'Arrivée pointée' })),
+        ...asArray(messages.messages).map((message: any) => ({ id: `m-${safeStr(message.id)}`, date: safeStr(message.createdAt), kind: 'message' as const, title: safeStr(message.content, 'Message'), meta: message.sender ? `De ${safeFullName(message.sender)}` : '' })),
       ];
-      merged.sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+      merged.sort((left, right) => (safeDate(right.date)?.getTime() ?? 0) - (safeDate(left.date)?.getTime() ?? 0));
       setItems(merged.slice(0, 50));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Impossible de charger l’historique.');
@@ -88,8 +89,8 @@ export default function HistoryPanel() {
             <article className="history-row" key={item.id}>
               <span className="history-mark">{item.kind === 'journal' ? <BookOpen size={15} /> : item.kind === 'activity' ? <Activity size={15} /> : item.kind === 'task' ? <CheckCircle2 size={15} /> : item.kind === 'attendance' ? <Clock3 size={15} /> : <MessageSquare size={15} />}</span>
               <span className="table-badge">{kindLabels[item.kind]}</span>
-              <div><strong>{item.title}</strong><small>{item.meta}</small></div>
-              <time>{new Date(item.date).toLocaleString('fr-FR')}</time>
+              <div><strong>{safeStr(item.title)}</strong><small>{safeStr(item.meta)}</small></div>
+              <time>{safeDateTime(item.date)}</time>
             </article>
           ))}
         </section>

@@ -543,3 +543,71 @@ body.modal-open{overflow:hidden}
 .ai-input input{flex:1;padding:10px 13px;border-radius:11px;font-size:13px;border:1px solid var(--line);outline:0;background:#f8fafc;color:#0f172a;font-family:inherit}
 .ai-input input:focus{border-color:#a5b4fc;box-shadow:0 0 0 3px #e5ebff}
 @media (max-width:560px){.ai-fab{right:14px;bottom:14px;width:52px;height:52px}.ai-panel{right:8px;bottom:8px}}
+
+/* =====================================================================
+   Corrections robustesse : défilement vertical propre, fermeture visible
+   ===================================================================== */
+
+/* Toutes les modales : jamais de contenu bloqué → scroll vertical + position pour le bouton de fermeture */
+.modal, .modal.panel, .modal .modal-header + .modal-body {
+  position: relative;
+}
+.modal, .modal.panel {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  max-height: calc(100dvh - 28px);
+  scrollbar-gutter: stable;
+}
+.modal-header{flex-shrink:0;position:sticky;top:0;z-index:6}
+.modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;max-height:calc(100dvh - 150px)}
+.modal-footer{flex-shrink:0}
+
+/* Bouton de fermeture : toujours visible, cliquable, au-dessus du contenu */
+.modal-close{
+  z-index:20;position:absolute;top:14px;right:14px;width:34px;height:34px;
+  border-radius:9px;background:#fff;color:#475467;font-size:20px;font-weight:700;
+  line-height:1;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #d8dee8;box-shadow:0 2px 8px rgba(16,24,40,.12);cursor:pointer;
+}
+.modal-close:hover{background:#fff0f0;color:var(--red);border-color:#f4c4c4}
+
+/* Panneaux de filtres du calendrier : fermeture visible */
+.calendar-filters{position:relative;padding-right:56px}
+.calendar-filters-close{
+  position:absolute;top:12px;right:14px;width:32px;height:32px;border-radius:8px;
+  background:#fff;color:#475467;font-size:19px;line-height:1;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);
+}
+.calendar-filters-close:hover{background:#fff0f0;color:var(--red);border-color:#f4c4c4}
+.calendar-empty{margin-bottom:16px}
+
+/* Pop-up cloche de notifications : layout fluide + fermeture visible */
+.notif-pop{
+  display:flex;flex-direction:column;
+  max-height:min(560px,calc(100dvh - 40px));
+}
+.notif-head{flex-shrink:0;display:flex;align-items:center;gap:10px}
+.notif-head .notif-title{flex:1}
+.notif-list{flex:1 1 auto;min-height:0;max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.notif-foot{flex-shrink:0}
+.notif-close{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  color:#475467;font-size:17px;line-height:1;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.notif-close:hover{background:#fff0f0;color:var(--red);border-color:#f4c4c4}
+
+/* Zones d'historique / listes longues : scroll vertical propre */
+.history-timeline{max-height:calc(100dvh - 220px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.journal-comments{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.journal-detail .journal-comments{max-height:220px}
+.supervision .responsive-table, .supervision .plat-table-wrap{max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.attachment-list{max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.chat-detail-comments{max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+@media (max-width:640px){
+  .modal, .modal.panel{max-height:calc(100dvh - 16px)}
+  .modal-body{max-height:calc(100dvh - 130px)}
+  .notif-pop{max-height:calc(100dvh - 24px)}
+}

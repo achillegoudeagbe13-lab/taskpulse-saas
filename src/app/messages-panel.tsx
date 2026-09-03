@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { MessageSquare, Plus, RefreshCw, Send } from './ui-icons';
+import { safeStr, safeDateTime, safeFullName, asArray } from '../lib/render-safe';
 
 type Contact = { id: string; firstName: string; lastName: string; username: string; role: string; department: string; photoUrl?: string | null };
 type Message = { id: string; content: string; createdAt: string; senderId: string; recipientId: string; sender: { firstName: string; lastName: string; username: string }; recipient: { firstName: string; lastName: string; username: string } };
@@ -20,7 +21,7 @@ export default function MessagesPanel({ currentUserId }: { currentUserId: string
     fetch('/api/users').then(async (response) => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setContacts(result.users.filter((user: Contact) => user.id !== currentUserId));
+      setContacts(asArray<Contact>(result.users).filter((user: Contact) => user.id !== currentUserId));
     }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   }, [currentUserId]);
 
@@ -85,8 +86,8 @@ export default function MessagesPanel({ currentUserId }: { currentUserId: string
               <p className="muted empty-note">Aucun autre membre actif.</p>
             ) : contacts.map((contact) => (
               <button key={contact.id} className={selected?.id === contact.id ? 'conversation-row active' : 'conversation-row'} onClick={() => loadConversation(contact)}>
-                <span className="avatar">{contact.firstName[0]}{contact.lastName[0]}</span>
-                <span><strong>{contact.firstName} {contact.lastName}</strong><small>{contact.department || contact.role}</small></span>
+                <span className="avatar">{safeStr(contact.firstName).charAt(0)}{safeStr(contact.lastName).charAt(0) || '?'}</span>
+                <span><strong>{safeFullName(contact)}</strong><small>{safeStr(contact.department) || safeStr(contact.role)}</small></span>
               </button>
             ))}
           </aside>
@@ -96,14 +97,14 @@ export default function MessagesPanel({ currentUserId }: { currentUserId: string
             ) : (
               <>
                 <div className="conversation-head">
-                  <span className="avatar">{selected.firstName[0]}{selected.lastName[0]}</span>
-                  <div><strong>{selected.firstName} {selected.lastName}</strong><small>@{selected.username}</small></div>
+                  <span className="avatar">{safeStr(selected.firstName).charAt(0)}{safeStr(selected.lastName).charAt(0) || '?'}</span>
+                  <div><strong>{safeFullName(selected)}</strong><small>@{safeStr(selected.username)}</small></div>
                 </div>
                 <div className="message-thread">
                   {messages.length === 0 ? (
                     <p className="muted empty-note">Aucun message pour le moment. Lancez la conversation.</p>
                   ) : messages.map((message) => (
-                    <div key={message.id} className={message.senderId === currentUserId ? 'message-bubble mine' : 'message-bubble'}><p>{message.content}</p><time>{new Date(message.createdAt).toLocaleString('fr-FR')}</time></div>
+                    <div key={safeStr(message.id)} className={message.senderId === currentUserId ? 'message-bubble mine' : 'message-bubble'}><p>{safeStr(message.content)}</p><time>{safeDateTime(message.createdAt)}</time></div>
                   ))}
                   {others.length > 0 && <div className="message-divider"><span>{others.length} message{others.length > 1 ? 's' : ''} non lu{others.length > 1 ? 's' : ''}</span></div>}
                 </div>
@@ -122,7 +123,7 @@ export default function MessagesPanel({ currentUserId }: { currentUserId: string
             <button className="modal-close" type="button" onClick={() => setOpen(false)}>×</button>
             <p className="eyebrow">COMMUNIQUE</p>
             <h2>Nouveau message</h2>
-            <label>Destinataire<select name="recipientId" required defaultValue="">{!selected && <option value="" disabled>Choisir un membre…</option>}{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.firstName} {contact.lastName} · {contact.department || contact.role}</option>)}</select></label>
+            <label>Destinataire<select name="recipientId" required defaultValue="">{!selected && <option value="" disabled>Choisir un membre…</option>}{contacts.map((contact) => <option key={contact.id} value={contact.id}>{safeFullName(contact)} · {safeStr(contact.department) || safeStr(contact.role)}</option>)}</select></label>
             <label>Message<textarea name="content" required maxLength={5000} placeholder="Votre message…" /></label>
             {formError && <div className="notice error">{formError}</div>}
             <div className="modal-actions">

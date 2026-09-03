@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Activity, BarChart3, BookOpen, ChevronRight, Clock3, RefreshCw, ShieldCheck, Users } from './ui-icons';
+import { safeStr, safeDateTime, safeFullName, asArray } from '../lib/render-safe';
 
 type Dashboard = {
   recentActivities: { id: string; title: string; status: string; createdAt: string; user: { firstName: string; lastName: string } }[];
@@ -33,7 +34,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (page: strin
       const audit = await auditRes.json();
       if (!dashboardRes.ok) throw new Error(dashboard.error);
       setData(dashboard);
-      if (auditRes.ok) setLogs(audit.logs);
+      if (auditRes.ok) setLogs(asArray<Log>(audit.logs));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Impossible de charger le tableau de bord administrateur.');
     } finally {
@@ -80,7 +81,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (page: strin
                 <div className="empty-state"><Activity size={22} /><h3>Aucune activité</h3><p className="muted">Les publications récentes apparaîtront ici.</p></div>
               ) : (
                 <div className="activity-feed">{data.recentActivities.map((activity) => (
-                  <div className="activity-row" key={activity.id}><span className={`activity-icon ${activity.status === 'TERMINE' ? 'green' : activity.status === 'BLOQUE' ? 'red' : 'blue'}`}>{activity.status === 'TERMINE' ? '✓' : activity.status === 'BLOQUE' ? '!' : '→'}</span><div><strong>{activity.title}</strong><small>{activity.user.firstName} {activity.user.lastName}</small></div><time>Il y a un instant</time></div>
+                  <div className="activity-row" key={safeStr(activity.id)}><span className={`activity-icon ${activity.status === 'TERMINE' ? 'green' : activity.status === 'BLOQUE' ? 'red' : 'blue'}`}>{activity.status === 'TERMINE' ? '✓' : activity.status === 'BLOQUE' ? '!' : '→'}</span><div><strong>{safeStr(activity.title)}</strong><small>{safeFullName(activity.user)}</small></div><time>Il y a un instant</time></div>
                 ))}</div>
               )}
             </section>
@@ -90,7 +91,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (page: strin
                 <p className="muted">Aucune action enregistrée.</p>
               ) : (
                 <div className="notification-list">{logs.slice(0, 6).map((log) => (
-                  <button className="notification-row" key={log.id}><span className="notification-icon"><ShieldCheck size={16} /></span><span><strong>{log.action}</strong><small>{log.entity} · {log.user ? `${log.user.firstName} ${log.user.lastName}` : 'Système'}</small><time>{new Date(log.createdAt).toLocaleString('fr-FR')}</time></span></button>
+                  <button className="notification-row" key={safeStr(log.id)}><span className="notification-icon"><ShieldCheck size={16} /></span><span><strong>{safeStr(log.action)}</strong><small>{safeStr(log.entity)} · {log.user ? safeFullName(log.user) : 'Système'}</small><time>{safeDateTime(log.createdAt)}</time></span></button>
                 ))}</div>
               )}
             </section>

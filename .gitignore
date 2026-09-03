@@ -4,3 +4,20 @@ node_modules
 prisma/*.db
 prisma/*.db-journal
 .env*
+
+# Build artifacts & logs
+*.log
+*.tsbuildinfo
+.final-build*
+.finalbuild*
+.finalize.cmd
+.fb.log
+.fbuild.log
+run-build.cmd
+
+# Workspace temp helpers
+.step*
+.term-check*
+.audit.json
+coverage/
+.vitest/

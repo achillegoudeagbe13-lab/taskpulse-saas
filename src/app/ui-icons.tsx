@@ -33,6 +33,7 @@ export const Search = (props: IconProps) => <Icon {...props}><circle cx="11" cy=
 export const Trash2 = (props: IconProps) => <Icon {...props}><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3" /></Icon>;
 export const Activity = (props: IconProps) => <Icon {...props}><path d="M3 12h4l2-7 4 14 2-7h6" /></Icon>;
 export const ChevronRight = (props: IconProps) => <Icon {...props}><path d="m9 18 6-6-6-6" /></Icon>;
+export const ChevronLeft = (props: IconProps) => <Icon {...props}><path d="m15 18-6-6 6-6" /></Icon>;
 export const LayoutDashboard = (props: IconProps) => <Icon {...props}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></Icon>;
 export const Menu = (props: IconProps) => <Icon {...props}><path d="M4 6h16M4 12h16M4 18h16" /></Icon>;
 export const MessageSquare = (props: IconProps) => <Icon {...props}><path d="M4 4h16v12H8l-4 4z" /></Icon>;

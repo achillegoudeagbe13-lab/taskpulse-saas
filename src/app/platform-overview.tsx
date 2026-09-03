@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Building2, RefreshCw, ShieldCheck, Users } from './ui-icons';
+import { safeStr, safeDateLabel, asArray } from '../lib/render-safe';
 
 type OrgRow = {
   id: string;
@@ -88,16 +89,16 @@ export default function PlatformOverview() {
                 <table>
                   <thead><tr><th>Organisation</th><th>Secteur</th><th>Pays</th><th>Statut</th><th>Membres</th><th>Tâches</th><th>Activités</th><th>Créée le</th></tr></thead>
                   <tbody>
-                    {data.organizations.map((org) => (
-                      <tr key={org.id}>
-                        <td><strong>{org.name}</strong><small>/{org.slug}</small></td>
-                        <td>{org.sector || '—'}</td>
-                        <td>{org.country || '—'}</td>
+                    {asArray<OrgRow>(data.organizations).map((org) => (
+                      <tr key={safeStr(org.id)}>
+                        <td><strong>{safeStr(org.name)}</strong><small>/{safeStr(org.slug)}</small></td>
+                        <td>{safeStr(org.sector) || '—'}</td>
+                        <td>{safeStr(org.country) || '—'}</td>
                         <td><span className={`status-badge ${org.status === 'ACTIVE' ? 'active' : ''}`}>{org.status === 'ACTIVE' ? 'Active' : 'Suspendue'}</span></td>
-                        <td>{org._count.memberships}</td>
-                        <td>{org._count.tasks}</td>
-                        <td>{org._count.activities}</td>
-                        <td>{new Date(org.createdAt).toLocaleDateString('fr-FR')}</td>
+                        <td>{org._count?.memberships ?? 0}</td>
+                        <td>{org._count?.tasks ?? 0}</td>
+                        <td>{org._count?.activities ?? 0}</td>
+                        <td>{safeDateLabel(org.createdAt)}</td>
                       </tr>
                     ))}
                   </tbody>

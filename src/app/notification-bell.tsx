@@ -5,6 +5,29 @@ import { Bell, CheckCheck } from './ui-icons';
 
 type Notif = { id: string; title: string; content: string; readAt: string | null; createdAt: string };
 
+/** Convertit n'importe quelle valeur en chaîne sûre pour le rendu React (évite l'erreur #130). */
+function safeStr(value: unknown, fallback = ''): string {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'object') {
+    try {
+      const asDate = new Date(value as any);
+      if (!isNaN(asDate.getTime())) return asDate.toISOString();
+    } catch { /* ignore */ }
+    try { return String(value); } catch { return fallback; }
+  }
+  return String(value);
+}
+
+/** Date locale sûre pour l'affichage d'horodatage. */
+function safeDateTime(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const d = new Date(value as any);
+  if (isNaN(d.getTime())) return '';
+  try { return d.toLocaleString('fr-FR'); } catch { return ''; }
+}
+
 /**
  * Cloche de notifications « temps réel » :
  * - polling léger toutes les 20 s sur /api/notifications
@@ -75,6 +98,7 @@ export default function NotificationBell({ onOpenAll }: { onOpenAll?: () => void
             <button onClick={markAll} title="Marquer toutes comme lues" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <CheckCheck size={14} /> Tout marquer lu
             </button>
+            <button className="notif-close" onClick={() => setOpen(false)} aria-label="Fermer les notifications" title="Fermer">×</button>
           </div>
           <div className="notif-list">
             {items.length === 0 ? (
@@ -84,16 +108,16 @@ export default function NotificationBell({ onOpenAll }: { onOpenAll?: () => void
             ) : (
               items.slice(0, 6).map((n) => (
                 <button
-                  key={n.id}
+                  key={safeStr(n.id)}
                   className={'notification-row' + (n.readAt ? ' read' : '')}
                   style={{ padding: '11px 0' }}
                   onClick={() => markOne(n.id)}
                 >
                   <span className="notification-icon"><Bell size={15} /></span>
                   <span>
-                    <strong>{n.title}</strong>
-                    <small>{n.content}</small>
-                    <time>{new Date(n.createdAt).toLocaleString('fr-FR')}</time>
+                    <strong>{safeStr(n.title, 'Notification')}</strong>
+                    <small>{safeStr(n.content)}</small>
+                    <time>{safeDateTime(n.createdAt)}</time>
                   </span>
                   {!n.readAt && <i />}
                 </button>

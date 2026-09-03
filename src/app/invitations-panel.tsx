@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { Check, Plus, Send, Trash2 } from './ui-icons';
+import { safeStr, safeDate, safeDateLabel, safeFullName, asArray } from '../lib/render-safe';
 
 type Invitation = { id: string; token: string; email: string | null; firstName: string | null; lastName: string | null; role: string; status: string; expiresAt: string; createdAt: string; invitedBy: { firstName: string; lastName: string } };
 
@@ -21,7 +22,7 @@ export default function InvitationsPanel() {
       const response = await fetch('/api/invitations');
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setItems(result.invitations);
+      setItems(asArray<Invitation>(result.invitations));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Impossible de charger les invitations.');
     } finally {
@@ -88,11 +89,11 @@ export default function InvitationsPanel() {
                 <tbody>
                   {items.map((item) => (
                     <tr key={item.id}>
-                      <td><strong>{[item.firstName, item.lastName].filter(Boolean).join(' ') || '—'}</strong><small>par {item.invitedBy.firstName} {item.invitedBy.lastName}</small></td>
-                      <td>{item.email || '—'}</td>
-                      <td><span className="table-badge">{roleLabel(item.role)}</span></td>
-                      <td><span className={`status-badge ${item.status === 'PENDING' && new Date(item.expiresAt) > new Date() ? 'active' : ''}`}>{item.status === 'ACCEPTED' ? 'Acceptée' : item.status === 'REVOKED' ? 'Révoquée' : new Date(item.expiresAt) > new Date() ? 'En attente' : 'Expirée'}</span></td>
-                      <td>{new Date(item.expiresAt).toLocaleDateString('fr-FR')}</td>
+                      <td><strong>{[safeStr(item.firstName), safeStr(item.lastName)].filter(Boolean).join(' ') || '—'}</strong><small>par {safeFullName(item.invitedBy)}</small></td>
+                      <td>{safeStr(item.email) || '—'}</td>
+                      <td><span className="table-badge">{roleLabel(safeStr(item.role))}</span></td>
+                      <td><span className={`status-badge ${item.status === 'PENDING' && safeDate(item.expiresAt) && safeDate(item.expiresAt)!.getTime() > Date.now() ? 'active' : ''}`}>{item.status === 'ACCEPTED' ? 'Acceptée' : item.status === 'REVOKED' ? 'Révoquée' : (safeDate(item.expiresAt)?.getTime() ?? 0) > Date.now() ? 'En attente' : 'Expirée'}</span></td>
+                      <td>{safeDateLabel(item.expiresAt)}</td>
                       <td>
                         {item.status === 'PENDING' && (
                           <button className={copied === item.token ? 'claim-button' : 'outline-button'} onClick={() => copy(item.token)}>
