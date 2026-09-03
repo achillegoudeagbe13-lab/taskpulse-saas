@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v6.1] - 2026-09-03
+
+### Fixed
+- Erreur React #130 (« Objects are not valid as a React child ») : nouveau module `src/lib/render-safe.ts` avec helpers sûrs (`safeStr`, `safeDate`, `safeDateTime`, `safeDateLabel`, `safeTimeLabel`, `safeFullName`, `asArray`) appliqués sur l'ensemble des panneaux
+- Défilement interne des modales amélioré (UX scroll)
+- Erreurs TypeScript corrigées (`tsconfig.tsbuildinfo` exclu du repo, options tsconfig ajustées)
+- Contrats de routes API alignés (`/api/org/calendar`, `/api/platform/orgs/[id]`)
+- Cloche de notifications et panneau notifications : rendu sécurisé contre les valeurs nulles/undefined
+
+### Changed
+- `UsersPanel.tsx` extrait dans un composant dédié (`src/app/o/[slug]/users/`) pour alléger la page
+- `next.config.js` : alias `@` épinglé via webpack
+- `.gitignore` enrichi (logs de build, fichiers temporaires) ; suppression des logs historiques du dépôt
+
+### Validation
+- Build local validé : `Compiled successfully` + `Generating static pages (40/40)`
+- Commit : `8185140`
+
+
 ## [v6] - 2026-08-23
 
 ### Added
