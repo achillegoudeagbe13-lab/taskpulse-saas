@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - la clé est désormais recherchée dans 5 noms de variables : `GEMINI_API_KEY`, `gemini_api_key`, `GEMINI_KEY`, `GOOGLE_API_KEY`, `google_api_key`
   - modèle codé en dur `gemini-1.5-flash` (en cours de retrait de l'API Google → 404 silencieux converti en mode hors-ligne) remplacé par une chaîne de secours : `GEMINI_MODEL` (optionnel) → `gemini-2.0-flash` → `gemini-1.5-flash`, avec mémorisation du modèle qui fonctionne
   - logs serveur explicites (statut HTTP + détail Google, sans jamais exposer la clé) pour diagnostiquer depuis les logs Render
-  - erreurs différenciées côté utilisateur : clé refusée (401/403), quota atteint (429), service indisponible, réponse vide/bloquée
+  - erreurs différenciées côté utilisateur : clé refusée (400 `API_KEY_INVALID` / 401 / 403), quota atteint (429), modèles inaccessibles, réseau/timeout, réponse vide/bloquée
+  - le message d'erreur réel de Google est désormais inclus dans le warning affiché dans l'interface (tronqué à 160 caractères), rendant la cause visible sans consulter les logs
+  - la clé invalide détectée via `API_KEY_INVALID` interrompt immédiatement l'essai des modèles (inutile de tester les autres)
 
 ### Changed
 - `src/app/ai-assistant.tsx` : l'avertissement serveur (`warning`) est désormais affiché dans la bulle de l'assistant au lieu d'être ignoré

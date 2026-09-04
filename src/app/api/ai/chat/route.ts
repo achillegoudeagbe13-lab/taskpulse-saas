@@ -45,8 +45,22 @@ let cachedModel: string | null = null;
 interface GeminiCallResult {
   ok: boolean;
   status?: number;
+  /** Nature de l'échec, pour afficher un message adapté à l'utilisateur. */
+  kind?: 'key' | 'quota' | 'models' | 'network' | 'unknown';
   detail?: string;
   json?: any;
+}
+
+/** Extrait le message d'erreur lisible d'une réponse d'erreur Google (JSON ou brut). */
+function extractGoogleError(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw);
+    const msg = parsed?.error?.message;
+    if (typeof msg === 'string' && msg) return msg.slice(0, 200);
+  } catch {
+    /* corps non JSON */
+  }
+  return raw.slice(0, 200);
 }
 
 /** Appelle l'API Gemini en essayant les modèles disponibles (deadline globale de 25 s). */
@@ -54,6 +68,8 @@ async function callGemini(apiKey: string, body: unknown): Promise<GeminiCallResu
   const unique = Array.from(new Set([cachedModel, ...GEMINI_MODELS].filter((m): m is string => Boolean(m))));
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 25_000);
+  let lastStatus: number | undefined;
+  let lastDetail: string | undefined;
   try {
     for (const model of unique) {
       try {
@@ -70,23 +86,32 @@ async function callGemini(apiKey: string, body: unknown): Promise<GeminiCallResu
           cachedModel = model;
           return { ok: true, json: await res.json().catch(() => null) };
         }
-        const detail = (await res.text().catch(() => '')).slice(0, 300);
-        // 400/404 : modèle indisponible ou introuvable → on tente le modèle suivant.
-        if (res.status === 400 || res.status === 404) {
-          console.error(`[ai/chat] Modèle "${model}" indisponible (HTTP ${res.status}). Essai du modèle suivant…`);
-          continue;
+        const message = extractGoogleError(await res.text().catch(() => ''));
+        lastStatus = res.status;
+        lastDetail = message;
+        // Clé invalide/refusée ou API non activée : aucun autre modèle ne résoudra le problème.
+        if (res.status === 400 && /API_KEY_INVALID|api key not valid/i.test(message)) {
+          return { ok: false, status: res.status, kind: 'key', detail: message };
         }
-        // 401/403 (clé refusée), 429 (quota) ou autre : un autre modèle ne résoudra rien.
-        return { ok: false, status: res.status, detail };
+        if (res.status === 401 || res.status === 403) {
+          return { ok: false, status: res.status, kind: 'key', detail: message };
+        }
+        if (res.status === 429) {
+          return { ok: false, status: res.status, kind: 'quota', detail: message };
+        }
+        // 400/404 restants : modèle indisponible ou introuvable → on tente le modèle suivant.
+        console.error(`[ai/chat] Modèle "${model}" indisponible (HTTP ${res.status}) : ${message}`);
+        continue;
       } catch (err) {
         // Timeout ou réseau : même destination pour tous les modèles, inutile d'insister.
-        return { ok: false, detail: err instanceof Error ? err.message : String(err) };
+        const isAbort = err instanceof Error && err.name === 'AbortError';
+        return { ok: false, kind: 'network', detail: isAbort ? 'Délai dépassé (25 s)' : err instanceof Error ? err.message : String(err) };
       }
     }
   } finally {
     clearTimeout(timer);
   }
-  return { ok: false };
+  return { ok: false, status: lastStatus, kind: 'models', detail: lastDetail };
 }
 
 /** Réponses hors-ligne si GEMINI_API_KEY n'est pas configurée (dégradation propre). */
@@ -136,14 +161,20 @@ export async function POST(request: Request) {
 
     if (!call.ok) {
       // Log serveur (sans jamais exposer la clé) pour diagnostiquer depuis les logs Render.
-      console.error('[ai/chat] Gemini indisponible', call.status ?? '(sans réponse HTTP)', call.detail ?? '');
-      const warning =
-        call.status === 401 || call.status === 403
-          ? 'Clé API refusée par le service Gemini.'
-          : call.status === 429
+      console.error('[ai/chat] Échec Gemini', call.kind ?? 'unknown', call.status ?? '', call.detail ?? '');
+      const baseWarning =
+        call.kind === 'key'
+          ? 'Clé API refusée par Gemini — vérifiez la clé configurée sur Render.'
+          : call.kind === 'quota'
             ? 'Quota Gemini atteint, réessayez plus tard.'
-            : 'Service IA momentanément indisponible.';
-      return NextResponse.json({ reply: offlineAnswer(input.message), source: 'offline', warning });
+            : call.kind === 'models'
+              ? 'Aucun modèle Gemini accessible avec cette clé.'
+              : call.kind === 'network'
+                ? 'Service IA momentanément injoignable.'
+                : 'Service IA momentanément indisponible.';
+      // Le message Google est inclus pour rendre la cause visible directement dans l'interface.
+      const detail = call.detail ? ` (${call.detail.slice(0, 160)})` : '';
+      return NextResponse.json({ reply: offlineAnswer(input.message), source: 'offline', warning: baseWarning + detail });
     }
 
     const reply: string | undefined = call.json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('\n');
