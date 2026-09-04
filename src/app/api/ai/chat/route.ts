@@ -30,12 +30,15 @@ function getGeminiApiKey(): string | undefined {
 /**
  * Modèles essayés dans l'ordre ; le premier qui répond correctement est mémorisé
  * (cache module) pour ne pas retester les modèles retirés de l'API à chaque requête.
- * GEMINI_MODEL permet de forcer un modèle précis. Les modèles 1.5 sont gardés en
- * secours : leur retrait progressif renvoie sinon un 404 silencieux converti en
- * mode hors-ligne.
+ * GEMINI_MODEL permet de forcer un modèle précis. `gemini-flash-latest` est un alias
+ * Google pointant toujours vers le modèle flash stable actuel. En cas d'échec de
+ * toute la chaîne (modèles retirés), une résolution dynamique via ListModels prend
+ * le relais (voir callGemini).
  */
 const GEMINI_MODELS: string[] = [
   process.env.GEMINI_MODEL?.trim() || null,
+  'gemini-flash-latest',
+  'gemini-2.5-flash',
   'gemini-2.0-flash',
   'gemini-1.5-flash',
 ].filter((m): m is string => Boolean(m));
@@ -63,55 +66,99 @@ function extractGoogleError(raw: string): string {
   return raw.slice(0, 200);
 }
 
-/** Appelle l'API Gemini en essayant les modèles disponibles (deadline globale de 25 s). */
+/** Tente un appel generateContent sur un modèle ; null = modèle à passer (indisponible). */
+async function tryModel(
+  model: string,
+  apiKey: string,
+  body: unknown,
+  signal: AbortSignal,
+  skipped: string[],
+): Promise<GeminiCallResult | null> {
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal, body: JSON.stringify(body) },
+    );
+    if (res.ok) {
+      cachedModel = model;
+      return { ok: true, json: await res.json().catch(() => null) };
+    }
+    const message = extractGoogleError(await res.text().catch(() => ''));
+    // Clé invalide/refusée ou API non activée : aucun autre modèle ne résoudra le problème.
+    if ((res.status === 400 && /API_KEY_INVALID|api key not valid/i.test(message)) || res.status === 401 || res.status === 403) {
+      return { ok: false, status: res.status, kind: 'key', detail: message };
+    }
+    if (res.status === 429) {
+      return { ok: false, status: res.status, kind: 'quota', detail: message };
+    }
+    // 404 « not found » et autres : modèle indisponible → essayer le suivant.
+    skipped.push(`${model} (HTTP ${res.status}) : ${message}`);
+    return null;
+  } catch (err) {
+    // Timeout ou réseau : même destination pour tous les modèles, inutile d'insister.
+    const isAbort = err instanceof Error && err.name === 'AbortError';
+    return { ok: false, kind: 'network', detail: isAbort ? 'Délai dépassé (25 s)' : err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/** Tri de préférence : alias « latest » d'abord, puis famille flash récente, pro ensuite. */
+function modelPreference(name: string): number {
+  let score = 0;
+  if (!/flash/.test(name)) score += 100;
+  if (/lite/.test(name)) score += 10;
+  if (/latest/.test(name)) score -= 50;
+  const ver = name.match(/(\d+)[.-](\d+)/);
+  if (ver) score -= parseInt(ver[1], 10) * 10 + parseInt(ver[2], 10);
+  return score;
+}
+
+/** Liste les modèles réellement disponibles pour cette clé (ListModels), triés par préférence. */
+async function listGenerateContentModels(apiKey: string, signal: AbortSignal): Promise<string[] | null> {
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${encodeURIComponent(apiKey)}`,
+      { signal },
+    );
+    if (!res.ok) return null;
+    const json: any = await res.json().catch(() => null);
+    const models: any[] = Array.isArray(json?.models) ? json.models : [];
+    const usable = models
+      .filter((m) => Array.isArray(m?.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+      .map((m) => String(m?.name ?? '').replace(/^models\//, ''))
+      .filter((n) => n && !/embedding|aqa|imagen|image|audio|tts|veo|live/i.test(n));
+    return usable.sort((a, b) => modelPreference(a) - modelPreference(b));
+  } catch {
+    return null;
+  }
+}
+
+/** Appelle l'API Gemini : chaîne statique, puis résolution dynamique via ListModels (25 s max). */
 async function callGemini(apiKey: string, body: unknown): Promise<GeminiCallResult> {
   const unique = Array.from(new Set([cachedModel, ...GEMINI_MODELS].filter((m): m is string => Boolean(m))));
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 25_000);
-  let lastStatus: number | undefined;
-  let lastDetail: string | undefined;
+  const skipped: string[] = [];
   try {
     for (const model of unique) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: controller.signal,
-            body: JSON.stringify(body),
-          },
-        );
-        if (res.ok) {
-          cachedModel = model;
-          return { ok: true, json: await res.json().catch(() => null) };
-        }
-        const message = extractGoogleError(await res.text().catch(() => ''));
-        lastStatus = res.status;
-        lastDetail = message;
-        // Clé invalide/refusée ou API non activée : aucun autre modèle ne résoudra le problème.
-        if (res.status === 400 && /API_KEY_INVALID|api key not valid/i.test(message)) {
-          return { ok: false, status: res.status, kind: 'key', detail: message };
-        }
-        if (res.status === 401 || res.status === 403) {
-          return { ok: false, status: res.status, kind: 'key', detail: message };
-        }
-        if (res.status === 429) {
-          return { ok: false, status: res.status, kind: 'quota', detail: message };
-        }
-        // 400/404 restants : modèle indisponible ou introuvable → on tente le modèle suivant.
-        console.error(`[ai/chat] Modèle "${model}" indisponible (HTTP ${res.status}) : ${message}`);
-        continue;
-      } catch (err) {
-        // Timeout ou réseau : même destination pour tous les modèles, inutile d'insister.
-        const isAbort = err instanceof Error && err.name === 'AbortError';
-        return { ok: false, kind: 'network', detail: isAbort ? 'Délai dépassé (25 s)' : err instanceof Error ? err.message : String(err) };
+      const result = await tryModel(model, apiKey, body, controller.signal, skipped);
+      if (result) return result;
+      console.error(`[ai/chat] Modèle "${model}" indisponible, essai du suivant…`);
+    }
+    // Chaîne statique épuisée (modèles retirés…) : l'API elle-même liste les modèles
+    // que cette clé peut utiliser — auto-réparation face au cycle de vie des modèles.
+    const available = await listGenerateContentModels(apiKey, controller.signal);
+    if (available?.length) {
+      console.error(`[ai/chat] Modèles disponibles pour cette clé : ${available.join(', ')}`);
+      for (const model of available.slice(0, 4)) {
+        const result = await tryModel(model, apiKey, body, controller.signal, skipped);
+        if (result) return result;
       }
+      return { ok: false, kind: 'models', detail: `Modèles disponibles mais inutilisables : ${available.slice(0, 6).join(', ')}` };
     }
   } finally {
     clearTimeout(timer);
   }
-  return { ok: false, status: lastStatus, kind: 'models', detail: lastDetail };
+  return { ok: false, kind: 'models', detail: skipped.slice(-2).join(' | ') || 'Aucun modèle Gemini disponible pour cette clé.' };
 }
 
 /** Réponses hors-ligne si GEMINI_API_KEY n'est pas configurée (dégradation propre). */

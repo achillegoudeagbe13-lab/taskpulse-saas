@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - erreurs différenciées côté utilisateur : clé refusée (400 `API_KEY_INVALID` / 401 / 403), quota atteint (429), modèles inaccessibles, réseau/timeout, réponse vide/bloquée
   - le message d'erreur réel de Google est désormais inclus dans le warning affiché dans l'interface (tronqué à 160 caractères), rendant la cause visible sans consulter les logs
   - la clé invalide détectée via `API_KEY_INVALID` interrompt immédiatement l'essai des modèles (inutile de tester les autres)
+  - **chaîne de modèles obsolète** (404 « models/gemini-2.0-flash / gemini-1.5-flash is not found » — ces modèles ont été retirés de l'API) : ajout de l'alias `gemini-flash-latest` et de `gemini-2.5-flash` en tête de chaîne
+  - **auto-résolution dynamique** : si toute la chaîne statique échoue, le serveur interroge `ListModels` (endpoint recommandé par le message d'erreur de Google), filtre les modèles compatibles `generateContent`, les trie par préférence (alias latest > flash récent > pro) et utilise le premier qui répond — le modèle retenu est mémorisé pour les requêtes suivantes
+  - en cas d'échec total, la liste réelle des modèles disponibles pour la clé est affichée dans le warning (et loguée côté serveur)
 
 ### Changed
 - `src/app/ai-assistant.tsx` : l'avertissement serveur (`warning`) est désormais affiché dans la bulle de l'assistant au lieu d'être ignoré
