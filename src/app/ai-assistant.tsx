@@ -46,7 +46,8 @@ export default function AIAssistant({ userName, isAdmin }: { userName: string; i
         }),
       });
       const json = await res.json();
-      setMessages((m) => [...m, { role: 'model', text: json.reply ?? json.error ?? "Désolé, une erreur est survenue." }]);
+      const warning = typeof json.warning === 'string' && json.warning ? `\n\n(ℹ️ ${json.warning})` : '';
+      setMessages((m) => [...m, { role: 'model', text: (json.reply ?? json.error ?? 'Désolé, une erreur est survenue.') + warning }]);
     } catch {
       setMessages((m) => [...m, { role: 'model', text: '⚠️ Connexion impossible. Réessayez dans un instant.' }]);
     } finally {

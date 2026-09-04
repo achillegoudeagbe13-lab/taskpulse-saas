@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v6.2] - 2026-09-04
+
+### Fixed
+- **Assistant IA Gemini inactif sur Render** (l'assistant se contentait des réponses basiques du guide hors-ligne malgré la clé configurée) :
+  - cause principale : variable configurée `gemini_api_key` (minuscules) sur le dashboard Render alors que le code ne lisait que `GEMINI_API_KEY` (Linux/Render est sensible à la casse) — la clé était donc invisible côté serveur
+  - la clé est désormais recherchée dans 5 noms de variables : `GEMINI_API_KEY`, `gemini_api_key`, `GEMINI_KEY`, `GOOGLE_API_KEY`, `google_api_key`
+  - modèle codé en dur `gemini-1.5-flash` (en cours de retrait de l'API Google → 404 silencieux converti en mode hors-ligne) remplacé par une chaîne de secours : `GEMINI_MODEL` (optionnel) → `gemini-2.0-flash` → `gemini-1.5-flash`, avec mémorisation du modèle qui fonctionne
+  - logs serveur explicites (statut HTTP + détail Google, sans jamais exposer la clé) pour diagnostiquer depuis les logs Render
+  - erreurs différenciées côté utilisateur : clé refusée (401/403), quota atteint (429), service indisponible, réponse vide/bloquée
+
+### Changed
+- `src/app/ai-assistant.tsx` : l'avertissement serveur (`warning`) est désormais affiché dans la bulle de l'assistant au lieu d'être ignoré
+
+### Validation
+- Type-check `tsc --noEmit` : 0 erreur
+- Build local complet : `Compiled successfully` + génération des pages, `EXITCODE=0`
+
+
 ## [v6.1] - 2026-09-03
 
 ### Fixed
