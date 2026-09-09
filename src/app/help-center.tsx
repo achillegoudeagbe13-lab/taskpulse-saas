@@ -95,9 +95,11 @@ const employeeSections: Section[] = [
     body: (
       <>
         <h3>Déposer une demande</h3>
-        <p>Dans le calendrier, cliquez <strong>« + Congé »</strong>, choisissez le type, les dates et un motif.</p>
+        <p>Dans le calendrier, <strong>cliquez sur une date</strong> (ou sur le bouton <strong>« Absence / Congé »</strong>), choisissez <em>Absence</em>, <em>Congé</em>, <em>Permission</em>, <em>RTT</em> ou <em>Maladie</em>, puis les dates et un motif.</p>
         <h3>Suivi</h3>
-        <p>Votre manager est notifié et approuve / rejette votre demande → un badge vous alerte.</p>
+        <p>Les administrateurs sont notifiés et approuvent / rejettent votre demande depuis le panneau <strong>« Validations »</strong> du calendrier → le badge « En attente de validation » disparaît.</p>
+        <h3>Annuler une demande</h3>
+        <p>Tant qu’elle est encore <em>en attente</em>, cliquez sur l’événement dans le calendrier puis sur <strong>« Annuler ma demande »</strong>. Une demande déjà approuvée ou rejetée ne peut plus être annulée seul(e).</p>
       </>
     ),
   },

@@ -168,7 +168,7 @@ function offlineAnswer(question: string): string {
     return "📍 **Pointage**\n1. Ouvrez l'onglet **Pointage** dans la barre latérale.\n2. Cliquez **Arrivée** ou **Départ**.\n3. Si votre admin a activé le contrôle GPS, autorisez la géolocalisation : vous devez être dans la zone du bureau (rayon défini par l'admin).\nSi le GPS est désactivé, le pointage reste libre et seule votre position est archivée pour audit.";
   }
   if (q.includes('calendrier') || q.includes('réunion') || q.includes('congé') || q.includes('absence')) {
-    return "📅 **Calendrier**\n- Onglet **Calendrier** : 3 vues (Mois / Semaine / Jour) fusionnant tâches (bleu), réunions (violet) et congés (orange).\n- Filtrez par type ou par membre via l'icône filtre.\n- Pour poser un congé : bouton **+ Congé** ; votre manager est notifié.";
+    return "📅 **Calendrier**\n- Onglet **Calendrier** : 3 vues (Mois / Semaine / Jour) fusionnant tâches (bleu), réunions (violet) et congés / absences / permissions (orange).\n- Cliquez sur **une date** pour signaler une absence, demander un congé ou une permission.\n- Les admins valident les demandes depuis le panneau **Validations** du calendrier.";
   }
   if (q.includes('mot de passe')) {
     return "🔑 **Mot de passe**\nSeul un administrateur peut réinitialiser un mot de passe : **Utilisateurs → icône clé 🔑 à côté du membre → saisir et confirmer**. Les sessions actives du compte sont alors déconnectées.";

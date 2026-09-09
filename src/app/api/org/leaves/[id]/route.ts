@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireOrgAdmin } from '../../../../../lib/auth';
+import { requireOrgMember, requireOrgAdmin } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 
 const ALLOWED: Record<string, string> = { APPROVED: 'APPROVED', REJECTED: 'REJECTED' };
@@ -29,4 +29,18 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   } catch {
     return NextResponse.json({ error: 'Statut impossible à appliquer.' }, { status: 400 });
   }
+}
+
+/** DELETE — annule (supprime) une demande de congé : par son auteur ou un admin, uniquement si encore PENDING. */
+export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+  const auth = await requireOrgMember();
+  if (auth.error) return auth.error;
+  const leave = await prisma.leaveRequest.findFirst({ where: { id: params.id, organizationId: auth.ctx.organizationId } });
+  if (!leave) return NextResponse.json({ error: 'Demande introuvable.' }, { status: 404 });
+  const isOwner = leave.userId === auth.ctx.user.id;
+  const isAdmin = auth.ctx.orgRole === 'ORGANIZATION_ADMIN';
+  if (!isOwner && !isAdmin) return NextResponse.json({ error: 'Vous ne pouvez pas annuler cette demande.' }, { status: 403 });
+  if (leave.status !== 'PENDING') return NextResponse.json({ error: 'Seules les demandes en attente peuvent être annulées.' }, { status: 400 });
+  await prisma.leaveRequest.delete({ where: { id: leave.id } });
+  return NextResponse.json({ ok: true, message: 'Demande annulée.' });
 }

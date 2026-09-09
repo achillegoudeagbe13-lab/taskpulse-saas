@@ -5,7 +5,7 @@ import { Sparkles, Send, X } from './ui-icons';
 
 type Msg = { role: 'user' | 'model'; text: string };
 
-const SUGGESTIONS = ['Comment pointer ma journée ?', 'Comment poser un congé ?', 'Où voir les réunions ?', 'Comment marche le GPS du pointage ?'];
+const SUGGESTIONS = ['Comment pointer ma journée ?', 'Comment demander un congé ou une absence ?', 'Où voir les réunions ?', 'Comment marche le GPS du pointage ?'];
 
 function renderText(text: string) {
   return text.split('\n').map((line, i) => (

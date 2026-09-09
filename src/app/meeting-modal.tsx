@@ -1,9 +1,9 @@
 'use client';
-import { useState, type FormEvent } from 'react';
-import { X, Calendar as CalendarIcon, Users } from './ui-icons';
+import { useEffect, useState, type FormEvent } from 'react';
+import { X } from './ui-icons';
 type Member = { id: string; name: string };
 
-export default function MeetingModal({ open, onClose, members }: { open: boolean; onClose: () => void; members: Member[] }) {
+export default function MeetingModal({ open, onClose, onCreated, members, defaultDate = '' }: { open: boolean; onClose: () => void; onCreated?: () => void; members: Member[]; defaultDate?: string }) {
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [start, setStart] = useState('');
@@ -14,6 +14,17 @@ export default function MeetingModal({ open, onClose, members }: { open: boolean
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // À l'ouverture : pré-remplit l'horaire avec la date cliquée dans le calendrier (ou vide).
+  useEffect(() => {
+    if (!open) return;
+    const base = defaultDate?.slice(0, 10) ?? '';
+    setStart(base ? `${base}T09:00` : '');
+    setEnd(base ? `${base}T10:00` : '');
+    setTitle(''); setDesc(''); setLocation(''); setLink(''); setSelected([]);
+    setError(''); setSuccess(''); setSaving(false);
+  }, [open, defaultDate]);
+
   if (!open) return null;
 
   function toggle(id: string) { setSelected(selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id]); }
@@ -27,6 +38,7 @@ export default function MeetingModal({ open, onClose, members }: { open: boolean
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Erreur inconnue.');
       setSuccess('Réunion programmée et participants notifiés.'); setTitle(''); setDesc(''); setStart(''); setEnd(''); setLocation(''); setLink(''); setSelected([]);
+      setTimeout(() => { onCreated?.(); onClose(); }, 700);
     } catch (e2) { setError((e2 as Error).message); } finally { setSaving(false); }
   }
 
