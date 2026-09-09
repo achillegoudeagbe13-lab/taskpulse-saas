@@ -114,8 +114,13 @@ export default function CalendarPanel({ user, orgRole }: { user: any; orgRole?: 
   const [filterOpen, setFilterOpen] = useState(false);
   const [types, setTypes] = useState<Record<CalEvent['type'], boolean>>({ task: true, meeting: true, leave: true });
   const [memberId, setMemberId] = useState<string | 'all'>('all');
-  // Rôle d'organisation (Membership.role) fourni par AppLayout — le champ user.role est l'ancien rôle global.
-  const isAdmin = orgRole === 'ORGANIZATION_ADMIN' || user?.role === 'ORGANIZATION_ADMIN';
+  // Rôle admin : la source de vérité est le SERVEUR (GET /api/org/leaves → `isAdmin`, calculé en
+  // base sur le Membership actif). Les props ne servent que d'estimation pour le 1er rendu (éviter
+  // un flash du panneau avant la réponse). NB : user.role est l'ANCIEN rôle global
+  // (ADMIN/EMPLOYE/STAGIAIRE) — jamais 'ORGANIZATION_ADMIN', d'où le mapping 'ADMIN' ci-dessous.
+  const [isAdmin, setIsAdmin] = useState<boolean>(
+    orgRole === 'ORGANIZATION_ADMIN' || user?.role === 'ADMIN'
+  );
   const [refreshKey, setRefreshKey] = useState(0);
   const [menuDate, setMenuDate] = useState<Date | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -205,6 +210,8 @@ export default function CalendarPanel({ user, orgRole }: { user: any; orgRole?: 
       .then((json) => {
         if (cancelled) return;
         if (Array.isArray(json?.leaves)) setLeaveRequests(json.leaves);
+        // Le serveur tranche définitivement le rôle admin (Membership actif en base).
+        if (typeof json?.isAdmin === 'boolean') setIsAdmin(json.isAdmin);
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLeavesLoading(false); });
