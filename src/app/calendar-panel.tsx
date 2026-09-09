@@ -105,7 +105,7 @@ function normalizeEvent(raw: any): CalEvent | null {
   return normalized;
 }
 
-export default function CalendarPanel({ user }: { user: any }) {
+export default function CalendarPanel({ user, orgRole }: { user: any; orgRole?: string | null }) {
   const [mode, setMode] = useState<Mode>('month');
   const [current, setCurrent] = useState(new Date());
   const [events, setEvents] = useState<CalEvent[]>([]);
@@ -114,7 +114,8 @@ export default function CalendarPanel({ user }: { user: any }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [types, setTypes] = useState<Record<CalEvent['type'], boolean>>({ task: true, meeting: true, leave: true });
   const [memberId, setMemberId] = useState<string | 'all'>('all');
-  const isAdmin = user?.role === 'ORGANIZATION_ADMIN';
+  // Rôle d'organisation (Membership.role) fourni par AppLayout — le champ user.role est l'ancien rôle global.
+  const isAdmin = orgRole === 'ORGANIZATION_ADMIN' || user?.role === 'ORGANIZATION_ADMIN';
   const [refreshKey, setRefreshKey] = useState(0);
   const [menuDate, setMenuDate] = useState<Date | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -166,17 +167,16 @@ export default function CalendarPanel({ user }: { user: any }) {
   }
 
   /** Employé : annule sa propre demande encore en attente (suppression côté serveur). */
-  async function cancelMyLeave() {
-    const leaveId = selectedEvent?.leaveId;
+  async function cancelLeave(leaveId: string) {
     if (!leaveId) return;
-    setDetailError('');
+    setAdminError('');
     try {
       const res = await fetch(`/api/org/leaves/${leaveId}`, { method: 'DELETE' });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setDetailError(json?.error ?? "Impossible d'annuler la demande."); return; }
+      if (!res.ok) { setAdminError(json?.error ?? "Impossible d'annuler la demande."); return; }
       setSelectedEvent(null);
       setRefreshKey(refreshKey + 1);
-    } catch { setDetailError("Impossible d'annuler la demande."); }
+    } catch { setAdminError("Impossible d'annuler la demande."); }
   }
 
   useEffect(() => {
@@ -196,9 +196,8 @@ export default function CalendarPanel({ user }: { user: any }) {
     return () => { cancelled = true; };
   }, [current.getMonth(), current.getFullYear(), refreshKey]);
 
-  // Admin : liste des demandes (pour approbation / rejet).
+  // Liste des demandes : admin → toute l'organisation ; employé → uniquement les siennes (géré côté API).
   useEffect(() => {
-    if (!isAdmin) return;
     let cancelled = false;
     setLeavesLoading(true);
     fetch('/api/org/leaves')
@@ -210,7 +209,7 @@ export default function CalendarPanel({ user }: { user: any }) {
       .catch(() => {})
       .finally(() => { if (!cancelled) setLeavesLoading(false); });
     return () => { cancelled = true; };
-  }, [isAdmin, refreshKey]);
+  }, [refreshKey]);
 
   const days = useMemo(() => {
     if (mode === 'month') { const s = new Date(current.getFullYear(), current.getMonth(), 1); const start = new Date(s.getFullYear(), s.getMonth(), 1 - s.getDay()); return Array.from({ length: 42 }, (_, i) => addDays(start, i)); }
@@ -320,6 +319,38 @@ export default function CalendarPanel({ user }: { user: any }) {
         </section>
       )}
 
+      {!isAdmin && (
+        <section className="panel calendar-leaves-panel">
+          <div className="panel-heading">
+            <div><p className="eyebrow">MES DEMANDES</p><h3>Absences, congés &amp; permissions</h3></div>
+            {leavesLoading && <span className="spinner" />}
+          </div>
+          {adminError && <div className="notice error">{adminError}</div>}
+          {(() => {
+            const mine = leaveRequests.filter((r) => r.status === 'PENDING' || r.status === 'APPROVED' || r.status === 'REJECTED');
+            if (mine.length === 0) return <p className="muted">Vous n’avez aucune demande pour le moment.</p>;
+            return (
+              <ul className="leave-request-list">
+                {mine.map((r) => (
+                  <li key={safeStr(r.id)} className="leave-request-item">
+                    <div className="leave-request-info">
+                      <strong>{leaveLabel(safeStr(r.type))}</strong>
+                      <div><span className={`status-badge ${safeStr(r.status).toLowerCase()}`}>{statusLabel(r.status)}</span></div>
+                      <small>{safeDateLabel(r.startDate)} → {safeDateLabel(r.endDate)}{r.reason ? ` · ${safeStr(r.reason)}` : ''}</small>
+                    </div>
+                    {r.status === 'PENDING' && (
+                      <div className="leave-request-actions">
+                        <button type="button" className="outline-button danger" onClick={() => cancelLeave(r.id)}>Annuler</button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
+        </section>
+      )}
+
       <div className="calendar-legend">{(['task', 'meeting', 'leave'] as CalEvent['type'][]).map((t) => <span key={t}><span className="legend-dot" style={{ background: TYPE_COLORS[t] }} />{TYPE_LABELS[t]}{t === 'leave' ? ' (✓ approuvée)' : ''}</span>)}{<span className="legend-hint">· cliquez sur un événement pour le détail</span>}</div>
 
       {menuDate && (
@@ -377,7 +408,7 @@ export default function CalendarPanel({ user }: { user: any }) {
                   </>
                 )}
                 {selectedEvent.type === 'leave' && selectedEvent.status === 'PENDING' && selectedEvent.userId && selectedEvent.userId === currentUserId && (
-                  <button type="button" className="secondary-button" onClick={cancelMyLeave}>Annuler ma demande</button>
+                  <button type="button" className="secondary-button" onClick={() => cancelLeave(selectedEvent.leaveId as string)}>Annuler ma demande</button>
                 )}
               </div>
             </div>

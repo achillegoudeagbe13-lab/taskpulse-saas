@@ -23,7 +23,7 @@ const categories = ['Administration', 'Comptabilité', 'Finance', 'Communication
 
 type FormProps = { entry: Entry; onClose: () => void; onSave: (event: FormEvent<HTMLFormElement>) => void };
 
-export default function WorkJournalAdvanced({ user, onNavigate }: { user: User; onNavigate?: (page: string) => void }) {
+export default function WorkJournalAdvanced({ user, onNavigate, orgRole }: { user: User; onNavigate?: (page: string) => void; orgRole?: string | null }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [stats, setStats] = useState({ totalEntries: 0, documentedDays: 0, timeMinutes: 0, completedEntries: 0 });
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,8 @@ export default function WorkJournalAdvanced({ user, onNavigate }: { user: User; 
   const [editing, setEditing] = useState<Entry | null>(null);
   const [month, setMonth] = useState(new Date());
   const [report, setReport] = useState('');
-  const admin = user.role === 'ORGANIZATION_ADMIN';
+  // Rôle d'organisation fourni par AppLayout (Membership.role) ; user.role est l'ancien rôle global.
+  const admin = orgRole === 'ORGANIZATION_ADMIN' || user.role === 'ORGANIZATION_ADMIN';
 
   async function load() {
     setLoading(true);

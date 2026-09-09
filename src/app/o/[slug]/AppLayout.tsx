@@ -245,7 +245,7 @@ function renderContent(
     case 'Tâches':
       return <TasksPanel admin={ctx.orgRole === 'ORGANIZATION_ADMIN'} currentUserId={ctx.user.id} />;
     case 'Calendrier':
-      return <CalendarPanel user={user as any} />;
+      return <CalendarPanel user={user as any} orgRole={ctx.orgRole} />;
     case 'Pointage':
       return <AttendancePanel />;
     case 'Messages':
@@ -255,7 +255,7 @@ function renderContent(
     case 'Activités':
       return <ActivitiesPanel currentUserId={ctx.user.id} />;
     case 'Journal de travail':
-      return <WorkJournalPanel user={user as any} onNavigate={setPage} />;
+      return <WorkJournalPanel user={user as any} onNavigate={setPage} orgRole={ctx.orgRole} />;
     case 'Historique':
       return <HistoryPanel />;
     case 'Notifications':
