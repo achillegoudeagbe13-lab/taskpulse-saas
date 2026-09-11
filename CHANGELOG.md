@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7] - 2026-09-11
+
+### Added
+- **Système de monétisation par paliers & codes de licence d'activation :**
+  - Modèle `LicenseCode` (code unique, palier, stock de sièges, statut UNUSED/USED/REVOKED) + champs de facturation sur `Organization` (`planTier`, `planStatus`, `planExpiresAt`, `licenseCodeId`)
+  - Grille tarifaire : T1 1-3 (5 000 F), T2 4-10 (10 000 F), T3 11-20 (15 000 F), T4 20+ (20 000 F) — constante partagée `src/lib/plans.ts` (sûre client)
+  - `GET /api/org/plan` : état d'abonnement en temps réel (verrouillage auto si expiration ou dépassement de palier compté sièges = membres + invitations en attente)
+  - `POST /api/org/activate` : saisie d'un code d'activation par l'admin pour débloquer (ou mettre à niveau)
+  - **Écran de verrouillage** (`plan-lock.tsx`) affiché dans l'app quand l'organisation est verrouillée, avec grille tarifaire
+  - **Blocage des invitations en cas de dépassement de palier** : le POST `/api/invitations` refuse un nouveau membre qui ferait basculer l'équipe au palier supérieur (erreur 402 + palier requis) ; alerte claire dans le panneau Invitations
+  - Console super-admin : génération, listing, copie et révocation des codes (`GET/POST /api/platform/licenses`, `POST .../revoke`) + colonne « Palier » dans la vue organisations
+- **Réinitialisation sécurisée de mot de passe (zéro-connaissance) :**
+  - Modèle `PasswordReset` (jeton haché, usage unique, expire en 24 h) — le mot de passe n'est jamais stocké en clair
+  - `POST /api/auth/forgot`, `GET|POST /api/auth/reset`, pages `/forgot` et `/reset` + lien « Mot de passe oublié ? » sur la page de connexion
+- **Photos de profil :** upload depuis l'espace membre (data-URL, 1,5 Mo max) via `/api/profile` ; affichage de la vraie photo (avec fallback sur les initiales) dans la sidebar, le topbar, la gestion des membres, les activités et les annonces
+- **Refonte de la page d'accueil :** hero moderne centré, grille de cartes responsive (styles absents auparavant → corrige l'affichage brut / la superposition des icônes), en-tête & pied de page
+
+### Changed
+- Inscription d'organisation : démarre automatiquement au palier T1
+- `src/lib/billing.ts` ré-factoré : constantes de paliers purs dans `src/lib/plans.ts` + helpers serveur (`getOrgSeatUsage`, `checkInviteSeatCapacity`)
+- Renforcement du thème sombre (`landing.css`) : cartes/containers adaptés pour supprimer les flashs lumineux
+- `middleware.ts` : `/reset`, `/forgot`, `/rejoindre` désormais publics
+
+### Security
+- Le code d'activation brut n'est expirable et mono-organisation ; le jeton de reset est stocké haché
+
+### Validation
+- `prisma generate` + `prisma validate` : OK
+- Type-check `tsc --noEmit` : 0 erreur
+- **Migration base requise avant mise en ligne : `npx prisma db push --skip-generate`** (déjà exécuté comme `preDeployCommand` sur Render)
+
 ## [v6.2] - 2026-09-04
 
 ### Fixed

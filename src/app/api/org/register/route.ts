@@ -61,6 +61,9 @@ export async function POST(request: Request) {
           country: input.organization.country || null,
           contactEmail: input.organization.contactEmail,
           phone: input.organization.phone || null,
+          // Nouvelle organisation : démarre au palier T1 (1 à 3 utilisateurs).
+          planTier: 'T1',
+          planStatus: 'ACTIVE',
         },
       });
       const user = await tx.user.create({

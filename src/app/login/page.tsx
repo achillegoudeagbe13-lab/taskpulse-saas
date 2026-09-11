@@ -111,6 +111,9 @@ export default function LoginPage() {
           </button>
 
           <p className="muted" style={{ textAlign: 'center', margin: '20px 0 0', fontSize: 13 }}>
+            <Link href="/forgot" style={{ color: 'var(--blue)', fontWeight: 600 }}>Mot de passe oublié ?</Link>
+          </p>
+          <p className="muted" style={{ textAlign: 'center', margin: '14px 0 0', fontSize: 13 }}>
             Pas encore d’organisation ?{' '}
             <Link href="/register-org" style={{ color: 'var(--blue)', fontWeight: 700 }}>Créer</Link>
             {' '}·{' '}

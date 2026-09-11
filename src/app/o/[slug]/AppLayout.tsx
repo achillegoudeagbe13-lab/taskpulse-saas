@@ -21,6 +21,7 @@ import UsersPanel from './users/UsersPanel';
 import NotificationBell from '../../notification-bell';
 import CalendarPanel from '../../calendar-panel';
 import AIAssistant from '../../ai-assistant';
+import PlanLock, { type OrgPlan } from '../../plan-lock';
 import { Moon, Sun } from '../../ui-icons';
 
 
@@ -86,6 +87,19 @@ export default function AppLayout({
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [branding, setBranding] = useState<{ name?: string | null; logoUrl?: string | null }>({});
+  const [plan, setPlan] = useState<OrgPlan | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
+
+  function loadPlan() {
+    setPlanLoading(true);
+    return fetch('/api/org/plan', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => setPlan(d))
+      .catch(() => setPlan(null))
+      .finally(() => setPlanLoading(false));
+  }
+
+  useEffect(() => { loadPlan(); }, []);
 
   // Charger l'identité visuelle de l'organisation (nom + logo).
   useEffect(() => {
@@ -122,6 +136,20 @@ export default function AppLayout({
 
     const ctx = { user, organization, organizationId, orgRole, isPlatformSuperAdmin, onNavigate: goTo };
   const tabs = orgRole === 'ORGANIZATION_ADMIN' ? ADMIN_TABS : MEMBER_TABS;
+
+  // Abonnement verrouillé → on masque l'espace de travail au profit de l'écran d'activation.
+  if (planLoading) {
+    return <div className="loading-state" style={{ minHeight: '70vh', display: 'grid', placeItems: 'center' }}><span className="spinner" /> Vérification de l’abonnement…</div>;
+  }
+  if (plan?.locked) {
+    return (
+      <div className="app-shell" data-org-locked="true">
+        <div style={{ padding: '4vh 20px 40px' }}>
+          <PlanLock plan={plan} orgName={ctx.organization?.name ?? ''} onActivated={() => { setPlan(null); loadPlan(); }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">
@@ -185,9 +213,14 @@ export default function AppLayout({
           </div>
           <div className="topbar-spacer" />
           <NotificationBell onOpenAll={() => goTo('Notifications')} />
-          <span className="avatar top-avatar" title={user.email}>
-            {(user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '')}
-          </span>
+          {user.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.photoUrl} alt="" className="avatar top-avatar" title={user.email} />
+          ) : (
+            <span className="avatar top-avatar" title={user.email}>
+              {(user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '')}
+            </span>
+          )}
         </header>
 
         <main className="app-content section-page" style={{ width: '100%' }}>
@@ -204,7 +237,12 @@ function UserInfo({ user }: { user: User }) {
   const initials = (user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || '??';
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 4px' }}>
-      <span className="avatar">{initials}</span>
+      {user.photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={user.photoUrl} alt="" className="avatar" />
+      ) : (
+        <span className="avatar">{initials}</span>
+      )}
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {user.firstName} {user.lastName}

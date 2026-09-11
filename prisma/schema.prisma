@@ -68,6 +68,28 @@ enum InvitationStatus {
   REVOKED
 }
 
+/// Palier tarifaire (volume de membres), défini en base pour la facturation.
+enum PlanTier {
+  T1 // 1 à 3 utilisateurs
+  T2 // 4 à 10 utilisateurs
+  T3 // 11 à 20 utilisateurs
+  T4 // 20+ utilisateurs
+}
+
+/// Statut de facturation de l'organisation.
+enum PlanStatus {
+  ACTIVE // Abonnement en cours → accès normal
+  EXPIRED // Abonnement expiré → accès verrouillé
+  LOCKED // Dépassement de palier → accès verrouillé jusqu'à mise à niveau
+}
+
+/// Cycle de vie d'un code de licence (clé d'activation générée par le super-admin).
+enum LicenseStatus {
+  UNUSED
+  USED
+  REVOKED
+}
+
 model RoleDefinition {
   id          String   @id @default(cuid())
   name        Role    @unique
@@ -110,6 +132,13 @@ model Organization {
   status        OrganizationStatus @default(ACTIVE)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
+
+  // --- Monétisation / abonnements ---
+  planTier        PlanTier?   // Palier courant (T1/T2/T3/T4)
+  planStatus      PlanStatus  @default(ACTIVE)
+  planExpiresAt   DateTime?   // Fin de l'abonnement (null = illimité)
+  licenseCodeId   String?     @unique // Code d'activation actif
+  license         LicenseCode? @relation("OrganizationLicense", fields: [licenseCodeId], references: [id], onDelete: SetNull)
 
   memberships    Membership[]
   invitations    Invitation[]
@@ -204,6 +233,7 @@ model User {
   createdMeetings      Meeting[]
   leaveRequests        LeaveRequest[]
   meetingAttendees     MeetingAttendee[]
+  passwordResets       PasswordReset[]
 }
 
 model WorkJournal {
@@ -519,4 +549,36 @@ model MeetingAttendee {
 
   @@unique([meetingId, userId])
   @@index([userId])
+}
+
+/// Jeton de réinitialisation de mot de passe (lien unique, à usage unique).
+/// Le mot de passe n'est JAMAIS stocké en clair : seul son hash peut être remplacé.
+model PasswordReset {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique // hash du jeton : le jeton brut n'est jamais enregistré
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  usedAt    DateTime? // null tant que le lien n'a pas été consommé
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// Code de licence d'activation : débloque un palier pour une organisation.
+model LicenseCode {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  tier        PlanTier
+  maxSeats    Int
+  note        String?       // Justification / référence de paiement
+  status      LicenseStatus @default(UNUSED)
+  activatedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime      @default(now())
+
+  organization Organization? @relation("OrganizationLicense")
+
+  @@index([tier])
+  @@index([status])
 }

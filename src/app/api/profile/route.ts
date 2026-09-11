@@ -12,6 +12,7 @@ const profileSchema = z.object({
   username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,30}$/),
   position: z.string().trim().max(120).optional(),
   bio: z.string().trim().max(2000).optional(),
+  photoUrl: z.string().trim().max(2_000_000).optional().nullable(),
 });
 
 export async function PATCH(request: Request) {
@@ -32,6 +33,7 @@ export async function PATCH(request: Request) {
         username: input.username,
         email: input.email,
         phone: input.phone || null,
+        photoUrl: input.photoUrl !== undefined ? (input.photoUrl || null) : undefined,
         profile: { upsert: { update: { position: input.position || null, bio: input.bio || null }, create: { position: input.position || null, bio: input.bio || null } } },
       },
     });

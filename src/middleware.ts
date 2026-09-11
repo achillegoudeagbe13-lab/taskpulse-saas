@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const publicRoutes = ['/', '/login', '/register-org'];
+  const publicRoutes = ['/', '/login', '/register-org', '/reset', '/forgot', '/rejoindre'];
   const isPublic = publicRoutes.some((r) => pathname === r);
   const isApi = pathname.startsWith('/api');
 

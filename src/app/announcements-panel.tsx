@@ -72,7 +72,12 @@ export default function AnnouncementsPanel({ admin }: { admin: boolean }) {
           ) : items.map((item) => (
             <article className="panel announcement-card" key={safeStr(item.id)}>
               <div className="activity-card-head">
-                <span className="avatar">{safeStr(item.author?.firstName).charAt(0)}{safeStr(item.author?.lastName).charAt(0) || '?'}</span>
+                {item.author?.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="avatar" src={item.author.photoUrl} alt="" />
+                ) : (
+                  <span className="avatar">{safeStr(item.author?.firstName).charAt(0)}{safeStr(item.author?.lastName).charAt(0) || '?'}</span>
+                )}
                 <div><strong>{safeFullName(item.author)}</strong><small>{safeDateTime(item.createdAt)}</small></div>
                 <span className="table-badge">Annonce</span>
               </div>

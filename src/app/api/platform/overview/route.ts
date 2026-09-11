@@ -14,6 +14,7 @@ export async function GET() {
     prisma.organization.findMany({
       select: {
         id: true, name: true, slug: true, sector: true, country: true, status: true, createdAt: true,
+        planTier: true, planStatus: true, planExpiresAt: true, licenseCodeId: true,
         _count: { select: { memberships: true, tasks: true, announcements: true, activities: true } },
       },
       orderBy: { createdAt: 'desc' },

@@ -202,9 +202,14 @@ export default function UsersPanel({
                 <tr key={member.membershipId} className="border-t">
                   <td className="p-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
-                        {safeStr(member.user.firstName).charAt(0)}{safeStr(member.user.lastName).charAt(0) || '?'}
-                      </span>
+                      {member.user.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={member.user.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      ) : (
+                        <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+                          {safeStr(member.user.firstName).charAt(0)}{safeStr(member.user.lastName).charAt(0) || '?'}
+                        </span>
+                      )}
                       <div><strong>{safeFullName(member.user)}</strong><small className="text-gray-500 block">@{safeStr(member.user.username)} · {safeStr(member.user.email)}</small></div>
                     </div>
                   </td>

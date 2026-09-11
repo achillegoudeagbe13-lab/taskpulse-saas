@@ -15,6 +15,7 @@ export default function InvitationsPanel() {
   const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [upgrade, setUpgrade] = useState<{ message: string; requiredPrice?: number } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -34,11 +35,19 @@ export default function InvitationsPanel() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError('');
+    setError(''); setUpgrade(null);
     const data = Object.fromEntries(new FormData(event.currentTarget));
     const response = await fetch('/api/invitations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     const result = await response.json();
-    if (!response.ok) { setError(result.error); return; }
+    if (!response.ok) {
+      if (result.upgradeRequired) {
+        setUpgrade({ message: result.error, requiredPrice: result.requiredPrice });
+        setOpen(false);
+      } else {
+        setError(result.error);
+      }
+      return;
+    }
     setOpen(false);
     event.currentTarget.reset();
     setNotice('Invitation créée : partagez le lien avec le futur membre.');
@@ -75,6 +84,19 @@ export default function InvitationsPanel() {
 
       {notice && <div className="notice success">{notice}</div>}
       {error && <div className="notice error">{error}<button className="link-button" onClick={load}>Réessayer</button></div>}
+      {upgrade && (
+        <div className="notice" style={{ borderLeft: '4px solid var(--orange)', background: 'var(--soft)' }}>
+          <strong>Mise à niveau requise 🔒</strong>
+          <p style={{ margin: '6px 0 10px', fontSize: 13.5 }}>{upgrade.message}</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {upgrade.requiredPrice != null && <span className="table-badge">Palier supérieur · {upgrade.requiredPrice.toLocaleString('fr-FR')} F</span>}
+            <button className="link-button" onClick={() => { setUpgrade(null); setOpen(true); }}>Nouvelle invitation</button>
+          </div>
+          <p className="muted" style={{ margin: '10px 0 0', fontSize: 12.5 }}>
+            Saisissez le code d’activation reçu après paiement pour débloquer ce palier.
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-state"><span className="spinner" /> Chargement des invitations…</div>

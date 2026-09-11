@@ -15,8 +15,12 @@ function legacyToOrgRole(role?: string | null): OrgRole {
 
 async function ensureDefaultOrganization() {
   const existing = await prisma.organization.findUnique({ where: { slug: DEFAULT_ORG_SLUG } });
-  if (existing) return existing;
-  const organization = await prisma.organization.create({ data: { name: DEFAULT_ORG_NAME, slug: DEFAULT_ORG_SLUG, sector: null, country: null, contactEmail: null } });
+  if (existing) {
+    // S'assure que l'org par défaut est facturable au palier T1 si non défini.
+    if (!existing.planTier) await prisma.organization.update({ where: { id: existing.id }, data: { planTier: 'T1', planStatus: 'ACTIVE' } });
+    return existing;
+  }
+  const organization = await prisma.organization.create({ data: { name: DEFAULT_ORG_NAME, slug: DEFAULT_ORG_SLUG, sector: null, country: null, contactEmail: null, planTier: 'T1', planStatus: 'ACTIVE' } });
   await prisma.systemSetting.create({ data: { key: 'organizationName', value: organization.name, organizationId: organization.id } });
   console.log(`✓ Organisation par défaut créée : ${organization.name}`);
   return organization;

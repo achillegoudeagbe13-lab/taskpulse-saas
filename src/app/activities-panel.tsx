@@ -94,7 +94,12 @@ export default function ActivitiesPanel({ currentUserId }: { currentUserId: stri
             return (
               <article className="panel activity-card" key={safeStr(activity.id)}>
                 <div className="activity-card-head">
-                  <span className="avatar">{safeStr(activity.user?.firstName).charAt(0)}{safeStr(activity.user?.lastName).charAt(0) || '?'}</span>
+                  {activity.user?.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="avatar" src={activity.user.photoUrl} alt="" />
+                  ) : (
+                    <span className="avatar">{safeStr(activity.user?.firstName).charAt(0)}{safeStr(activity.user?.lastName).charAt(0) || '?'}</span>
+                  )}
                   <div><strong>{safeFullName(activity.user)}</strong><small>{safeDateTime(activity.createdAt)}</small></div>
                   <span className={`status-badge ${safeStr(activity.status).toLowerCase()}`}>{safeStr(statusLabels[activity.status] ?? activity.status)}</span>
                 </div>

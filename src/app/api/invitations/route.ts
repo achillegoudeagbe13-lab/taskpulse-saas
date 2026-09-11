@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireOrgAdmin } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { writeAudit } from '../../../lib/audit';
+import { checkInviteSeatCapacity } from '../../../lib/billing';
 
 const INVITE_DAYS = 7;
 
@@ -24,6 +25,20 @@ export async function GET() {
 export async function POST(request: Request) {
   const auth = await requireOrgAdmin();
   if (auth.error) return auth.error;
+
+  // --- Monétisation : blocage en cas d'abonnement verrouillé ---
+  if (auth.ctx.organization.planStatus !== 'ACTIVE') {
+    return NextResponse.json({
+      error: 'Votre abonnement est expiré ou verrouillé. Saisissez un code d’activation pour continuer.',
+      locked: true,
+    }, { status: 402 });
+  }
+  // --- Monétisation : blocage en cas de dépassement de palier ---
+  const seatBlock = await checkInviteSeatCapacity(auth.ctx.organizationId, auth.ctx.organization.planTier);
+  if (seatBlock) {
+    return NextResponse.json({ ...seatBlock, error: seatBlock.error, upgradeRequired: true }, { status: 402 });
+  }
+
   try {
     const input = z.object({
       email: z.string().trim().toLowerCase().email().optional(),

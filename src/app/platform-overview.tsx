@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Building2, RefreshCw, ShieldCheck, Users } from './ui-icons';
 import { safeStr, safeDateLabel, asArray } from '../lib/render-safe';
+import { tierInfo } from '../lib/plans';
+import PlatformLicenses from './platform-licenses';
 
 type OrgRow = {
   id: string;
@@ -11,6 +13,10 @@ type OrgRow = {
   sector: string | null;
   country: string | null;
   status: string;
+  planTier?: string | null;
+  planStatus?: string | null;
+  planExpiresAt?: string | null;
+  licenseCodeId?: string | null;
   createdAt: string;
   _count: { memberships: number; tasks: number; announcements: number; activities: number };
 };
@@ -87,7 +93,7 @@ export default function PlatformOverview() {
             ) : (
               <div className="responsive-table">
                 <table>
-                  <thead><tr><th>Organisation</th><th>Secteur</th><th>Pays</th><th>Statut</th><th>Membres</th><th>Tâches</th><th>Activités</th><th>Créée le</th></tr></thead>
+                  <thead><tr><th>Organisation</th><th>Secteur</th><th>Pays</th><th>Statut</th><th>Palier</th><th>Membres</th><th>Tâches</th><th>Activités</th><th>Créée le</th></tr></thead>
                   <tbody>
                     {asArray<OrgRow>(data.organizations).map((org) => (
                       <tr key={safeStr(org.id)}>
@@ -95,6 +101,12 @@ export default function PlatformOverview() {
                         <td>{safeStr(org.sector) || '—'}</td>
                         <td>{safeStr(org.country) || '—'}</td>
                         <td><span className={`status-badge ${org.status === 'ACTIVE' ? 'active' : ''}`}>{org.status === 'ACTIVE' ? 'Active' : 'Suspendue'}</span></td>
+                        <td>
+                          <span className={`status-badge ${org.planStatus !== 'ACTIVE' ? 'bloque' : ''}`}>
+                            {tierInfo(org.planTier as any).label.split(' ').slice(-1)[0]}
+                            {org.planStatus !== 'ACTIVE' ? ' · ' + safeStr(org.planStatus) : ''}
+                          </span>
+                        </td>
                         <td>{org._count?.memberships ?? 0}</td>
                         <td>{org._count?.tasks ?? 0}</td>
                         <td>{org._count?.activities ?? 0}</td>
@@ -106,6 +118,8 @@ export default function PlatformOverview() {
               </div>
             )}
           </section>
+
+          <PlatformLicenses />
         </>
       ) : null}
     </div>
