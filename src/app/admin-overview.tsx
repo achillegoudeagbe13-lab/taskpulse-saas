@@ -6,7 +6,16 @@ import { safeStr, safeDateTime, safeFullName, asArray } from '../lib/render-safe
 
 type Dashboard = {
   recentActivities: { id: string; title: string; status: string; createdAt: string; user: { firstName: string; lastName: string } }[];
-  stats: { employees: number; interns: number; present: number; activities: number; blocked: number; tasks: number };
+  stats: {
+    totalTasks: number;
+    completedTasks: number;
+    hours: number;
+    totalActivities: number;
+    employees?: number;
+    interns?: number;
+    present?: number;
+    blocked?: number;
+  };
 };
 type Log = { id: string; action: string; entity: string; createdAt: string; user?: { firstName: string; lastName: string; username: string } | null };
 
@@ -61,7 +70,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (page: strin
       ) : data && (
         <>
           <div className="stats-grid">
-            {[['Employés actifs', data.stats.employees], ['Stagiaires actifs', data.stats.interns], ['Présents aujourd’hui', data.stats.present], ['Tâches en cours', data.stats.tasks - data.stats.blocked]].map(([label, value]) => (
+            {[['Employés actifs', data.stats.employees ?? 0], ['Stagiaires actifs', data.stats.interns ?? 0], ['Présents aujourd’hui', data.stats.present ?? 0], ['Tâches en cours', data.stats.totalTasks ?? 0]].map(([label, value]) => (
               <div className="stat-card" key={String(label)}><span className="stat-icon"><Users size={17} /></span><strong>{value}</strong><span className="stat-label">{label}</span></div>
             ))}
           </div>

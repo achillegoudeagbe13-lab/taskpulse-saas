@@ -2,22 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { BarChart3, Clock3, CheckCircle2, Send, Calendar, KanbanSquare, Bell } from '../../ui-icons';
-import { safeStr, safeDateLabel, asArray } from '../../../lib/render-safe';
+import { safeStr, safeDateLabel, safeFullName, asArray } from '../../../lib/render-safe';
 
 type DashboardData = {
   stats: {
     totalTasks: number;
     completedTasks: number;
-    blockedTasks: number;
-    totalActivities: number;
     hours: number;
-    attendance: number;
-    absent: number;
+    totalActivities: number;
   };
   byDay: Array<{ label: string; tasks: number; activities: number }>;
   weekTasks: Array<{ id: string; title: string; status: string; priority: string }>;
   upcomingTasks: Array<{ id: string; title: string; dueDate: string | null }>;
-  latestAnnouncement: { title: string; content: string; author: string } | null;
+  latestAnnouncement: { title: string; content: string; author: { firstName: string; lastName: string; photoUrl: string | null } | null } | null;
   unreadNotifications: number;
 };
 
@@ -98,7 +95,7 @@ export default function Dashboard({ ctx }: { ctx: any }) {
             <p className="eyebrow">📢 ANNONCE DE L’ÉQUIPE</p>
             <h3>{safeStr(data.latestAnnouncement.title)}</h3>
             <p>{safeStr(data.latestAnnouncement.content)}</p>
-            <p style={{ marginBottom: 0 }}>Par {safeStr(data.latestAnnouncement.author)}</p>
+            <p style={{ marginBottom: 0 }}>Par {safeFullName(data.latestAnnouncement.author)}</p>
           </a>
         </section>
       )}
