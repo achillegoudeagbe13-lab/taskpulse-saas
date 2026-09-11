@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Key, Zap } from '../ui-icons';
@@ -10,6 +10,14 @@ import { Key, Zap } from '../ui-icons';
  * Le jeton est validé côté serveur (usage unique, expire après 24 h).
  */
 export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="loading-state"><span className="spinner" /> Vérification du lien…</div>}>
+      <ResetContent />
+    </Suspense>
+  );
+}
+
+function ResetContent() {
   const router = useRouter();
   const params = useSearchParams();
   const token = params.get('token') ?? '';
