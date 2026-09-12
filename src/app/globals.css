@@ -398,6 +398,8 @@ body.modal-open{overflow:hidden}
 .dash-section{margin-bottom:26px}
 .dash-section>h2{font:600 17px 'Space Grotesk',sans-serif;margin:0 0 12px}
 .dash-announce{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);transition:transform .15s,box-shadow .15s}
+button.dash-announce{font:inherit;color:inherit;cursor:pointer}
+[data-theme='dark'] button.dash-announce{background:var(--card,#1e293b);color:inherit}
 .dash-announce:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
 .dash-announce h3{font:600 15px 'Space Grotesk',sans-serif;margin:6px 0 4px}
 .dash-announce p{color:var(--muted);font-size:13px;margin:0 0 8px}

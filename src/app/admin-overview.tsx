@@ -100,7 +100,7 @@ export default function AdminOverview({ onNavigate }: { onNavigate: (page: strin
                 <p className="muted">Aucune action enregistrée.</p>
               ) : (
                 <div className="notification-list">{logs.slice(0, 6).map((log) => (
-                  <button className="notification-row" key={safeStr(log.id)}><span className="notification-icon"><ShieldCheck size={16} /></span><span><strong>{safeStr(log.action)}</strong><small>{safeStr(log.entity)} · {log.user ? safeFullName(log.user) : 'Système'}</small><time>{safeDateTime(log.createdAt)}</time></span></button>
+                  <div className="notification-row" key={safeStr(log.id)} title={`${safeStr(log.action)} sur ${safeStr(log.entity)}`}><span className="notification-icon"><ShieldCheck size={16} /></span><span><strong>{safeStr(log.action)}</strong><small>{safeStr(log.entity)} · {log.user ? safeFullName(log.user) : 'Système'}</small><time>{safeDateTime(log.createdAt)}</time></span></div>
                 ))}</div>
               )}
             </section>

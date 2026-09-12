@@ -88,15 +88,21 @@ export default function Dashboard({ ctx }: { ctx: any }) {
         </section>
       )}
 
-      {/* Carte Annonce de l'équipe */}
+      {/* Carte Annonce de l'équipe — cliquable : ouvre la section Annonces */}
       {data.latestAnnouncement && (
         <section className="dash-section">
-          <a href="#" className="dash-announce" onClick={(e) => e.preventDefault()}>
+          <button
+            type="button"
+            className="dash-announce"
+            style={{ textAlign: 'left', width: '100%', cursor: 'pointer' }}
+            onClick={() => ctx.onNavigate?.('Annonces')}
+            title="Voir toutes les annonces"
+          >
             <p className="eyebrow">📢 ANNONCE DE L’ÉQUIPE</p>
             <h3>{safeStr(data.latestAnnouncement.title)}</h3>
             <p>{safeStr(data.latestAnnouncement.content)}</p>
             <p style={{ marginBottom: 0 }}>Par {safeFullName(data.latestAnnouncement.author)}</p>
-          </a>
+          </button>
         </section>
       )}
 
