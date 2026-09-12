@@ -28,7 +28,7 @@ import { Moon, Sun } from '../../ui-icons';
 import {
   LayoutDashboard, MessageSquare, Bell, Activity, BookOpen,
   Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut, Menu, X,
-  KanbanSquare, UserRound, BarChart3, Building2, HelpCircle, Calendar,
+  KanbanSquare, UserRound, BarChart3, Building2, HelpCircle, Calendar, Sparkles,
 } from '../../ui-icons';
 
 type User = {
@@ -224,6 +224,16 @@ export default function AppLayout({
         </header>
 
         <main className="app-content section-page" style={{ width: '100%' }}>
+          {plan?.inTrial && orgRole === 'ORGANIZATION_ADMIN' && (
+            <div className="trial-banner" role="status">
+              <Sparkles size={15} />
+              <span>
+                <strong>Période d'essai</strong> — il vous reste <strong>{plan.daysLeft ?? 0} jour(s)</strong>.
+                Activez un code de licence depuis les <strong>Paramètres</strong> pour continuer après l'essai.
+              </span>
+              <button type="button" className="trial-cta" onClick={() => goTo('Paramètres')}>Activer la licence</button>
+            </div>
+          )}
           {renderContent(activePage, ctx, goTo)}
         </main>
       </div>

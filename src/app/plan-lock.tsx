@@ -8,6 +8,8 @@ export type OrgPlan = {
   tier: string | null;
   planStatus: string;
   expiresAt: string | null;
+  daysLeft?: number;
+  inTrial?: boolean;
   seatLimit: number | null;
   currentMembers: number;
   pendingInvites: number;
