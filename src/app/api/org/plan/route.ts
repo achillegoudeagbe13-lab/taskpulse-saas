@@ -31,11 +31,20 @@ export async function GET() {
   const overLimit = tier.maxSeats !== null && projectedSeats > tier.maxSeats;
   const locked = status === 'EXPIRED' || status === 'LOCKED' || overLimit;
 
+  // Période d'essai : ACTIVE, avec échéance future et sans licence activée.
+  const daysLeft = organization.planExpiresAt && !expired
+    ? Math.max(0, Math.ceil((organization.planExpiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)))
+    : 0;
+  const inTrial = status === 'ACTIVE' && !expired && !overLimit
+    && Boolean(organization.planExpiresAt) && !organization.licenseCodeId;
+
   return NextResponse.json({
     tier: organization.planTier,
     planStatus: status,
     expired,
     expiresAt: organization.planExpiresAt?.toISOString() ?? null,
+    daysLeft,
+    inTrial,
     seatLimit: tier.maxSeats,
     currentMembers: members,
     pendingInvites,

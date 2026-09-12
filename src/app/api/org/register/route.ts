@@ -61,9 +61,12 @@ export async function POST(request: Request) {
           country: input.organization.country || null,
           contactEmail: input.organization.contactEmail,
           phone: input.organization.phone || null,
-          // Nouvelle organisation : démarre au palier T1 (1 à 3 utilisateurs).
+          // Nouvelle organisation : palier T1 (1 à 3 utilisateurs) + période
+          // d'essai de 10 jours. À l'expiration, l'accès se verrouille
+          // automatiquement (GET /api/org/plan) jusqu'à activation d'un code.
           planTier: 'T1',
           planStatus: 'ACTIVE',
+          planExpiresAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
         },
       });
       const user = await tx.user.create({
