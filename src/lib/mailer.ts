@@ -27,7 +27,7 @@ function getTransporter(): Transporter | null {
   return cached;
 }
 
-const FROM = process.env.MAIL_FROM || 'MAR-CI FLOW <no-reply@marciflow.app>';
+const FROM = process.env.MAIL_FROM || process.env.SMTP_FROM || 'MAR-CI FLOW <no-reply@marciflow.app>';
 
 export async function sendMail(to: string, subject: string, html: string): Promise<{ sent: boolean; error?: string }> {
   const transporter = getTransporter();

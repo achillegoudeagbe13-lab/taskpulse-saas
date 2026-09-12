@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.1] - 2026-09-13
+
+### Added
+- **« Plan & licence » dans les Paramètres** : l'admin consulte son palier, son tarif,
+  ses membres occupés et la date d'expiration, voit sa période d'essai (jours restants),
+  et peut saisir un **code de licence** pour activer ou mettre à niveau son abonnement
+  (+ bouton « Re-vérifier la licence » et grille tarifaire avec palier courant en surbrillance).
+- **Relance par e-mail avant/après expiration** (`scripts/notify-expiry.ts`) : le workflow
+  quotidien envoie aux admins d'organisation un e-mail de relance dans les 5 jours précédant
+  l'échéance et dès l'expiration, avec palier/tarif et lien d'action. Déduplication via
+  `SystemSetting` (une relance par échéance, pas par jour). Désactivable si SMTP absent,
+  seuil paramétrable (`EXPIRY_WARNING_DAYS`), lien via `APP_URL`.
+- `.env.example` documente `MAIL_FROM`, `APP_URL`, `EXPIRY_WARNING_DAYS` et les secrets
+  de workflow requis.
+
+### Changed
+- `src/lib/mailer.ts` : l'expéditeur honore désormais `MAIL_FROM` puis `SMTP_FROM`
+  (repli cohérent avec `.env.example`).
+
+### Validation
+- Type-check app (`tsc --noEmit`) : 0 erreur ; type-check du script : 0 erreur.
+- Exécution `npx tsx scripts/notify-expiry.ts` sans SMTP : dégradation douce (sortie 0).
+
 ## [v7] - 2026-09-11
 
 ### Added

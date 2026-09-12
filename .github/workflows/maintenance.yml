@@ -30,3 +30,14 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: node scripts/check-billing.mjs || echo "::warning::Des abonnements expirent bientôt ou sont expirés — voir le log au-dessus."
+      - name: Relance e-mail des expirations aux admins d'org
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          APP_URL: ${{ secrets.APP_URL }}
+          EXPIRY_WARNING_DAYS: '5'
+        run: npx tsx scripts/notify-expiry.ts
