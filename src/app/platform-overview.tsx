@@ -93,26 +93,39 @@ export default function PlatformOverview() {
             ) : (
               <div className="responsive-table">
                 <table>
-                  <thead><tr><th>Organisation</th><th>Secteur</th><th>Pays</th><th>Statut</th><th>Palier</th><th>Membres</th><th>Tâches</th><th>Activités</th><th>Créée le</th></tr></thead>
+                  <thead><tr><th>Organisation</th><th>Secteur</th><th>Pays</th><th>Statut</th><th>Palier</th><th>Membres</th><th>Tâches</th><th>Activités</th><th>Abonnement</th><th>Créée le</th></tr></thead>
                   <tbody>
-                    {asArray<OrgRow>(data.organizations).map((org) => (
-                      <tr key={safeStr(org.id)}>
-                        <td><strong>{safeStr(org.name)}</strong><small>/{safeStr(org.slug)}</small></td>
-                        <td>{safeStr(org.sector) || '—'}</td>
-                        <td>{safeStr(org.country) || '—'}</td>
-                        <td><span className={`status-badge ${org.status === 'ACTIVE' ? 'active' : ''}`}>{org.status === 'ACTIVE' ? 'Active' : 'Suspendue'}</span></td>
-                        <td>
-                          <span className={`status-badge ${org.planStatus !== 'ACTIVE' ? 'bloque' : ''}`}>
-                            {tierInfo(org.planTier as any).label.split(' ').slice(-1)[0]}
-                            {org.planStatus !== 'ACTIVE' ? ' · ' + safeStr(org.planStatus) : ''}
-                          </span>
-                        </td>
-                        <td>{org._count?.memberships ?? 0}</td>
-                        <td>{org._count?.tasks ?? 0}</td>
-                        <td>{org._count?.activities ?? 0}</td>
-                        <td>{safeDateLabel(org.createdAt)}</td>
-                      </tr>
-                    ))}
+                    {asArray<OrgRow>(data.organizations).map((org) => {
+                      const daysLeft = org.planExpiresAt
+                        ? Math.ceil((new Date(org.planExpiresAt).getTime() - Date.now()) / 86400000)
+                        : null;
+                      return (
+                        <tr key={safeStr(org.id)}>
+                          <td><strong>{safeStr(org.name)}</strong><small>/{safeStr(org.slug)}</small></td>
+                          <td>{safeStr(org.sector) || '—'}</td>
+                          <td>{safeStr(org.country) || '—'}</td>
+                          <td><span className={`status-badge ${org.status === 'ACTIVE' ? 'active' : ''}`}>{org.status === 'ACTIVE' ? 'Active' : 'Suspendue'}</span></td>
+                          <td>
+                            <span className={`status-badge ${org.planStatus !== 'ACTIVE' ? 'bloque' : ''}`}>
+                              {tierInfo(org.planTier as any).label.split(' ').slice(-1)[0]}
+                              {org.planStatus !== 'ACTIVE' ? ' · ' + safeStr(org.planStatus) : ''}
+                            </span>
+                          </td>
+                          <td>{org._count?.memberships ?? 0}</td>
+                          <td>{org._count?.tasks ?? 0}</td>
+                          <td>{org._count?.activities ?? 0}</td>
+                          <td>
+                            <ExtendCell
+                              orgId={safeStr(org.id)}
+                              expiresAt={org.planExpiresAt ?? null}
+                              daysLeft={daysLeft}
+                              onChanged={load}
+                            />
+                          </td>
+                          <td>{safeDateLabel(org.createdAt)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -122,6 +135,40 @@ export default function PlatformOverview() {
           <PlatformLicenses />
         </>
       ) : null}
+    </div>
+  );
+}
+
+/** Cellule d'abonnement : décompte + boutons de prolongation (super admin). */
+function ExtendCell({ orgId, expiresAt, daysLeft, onChanged }: { orgId: string; expiresAt: string | null; daysLeft: number | null; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false);
+
+  async function extend(body: { extendDays?: number; unlimited?: boolean }) {
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/platform/orgs/${orgId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const result = await response.json();
+      if (!response.ok) alert(result.error ?? 'Prolongation impossible.');
+      else onChanged();
+    } catch {
+      alert('Prolongation impossible (réseau).');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!expiresAt) {
+    return <span className="status-badge active">Illimité</span>;
+  }
+
+  const urgent = daysLeft !== null && daysLeft <= 3;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <span className={`status-badge ${urgent ? 'bloque' : 'active'}`}>{daysLeft !== null && daysLeft >= 0 ? `${daysLeft} j restants` : 'Expiré'}</span>
+      <button className="link-button" disabled={busy} onClick={() => extend({ extendDays: 10 })} title="Prolonger de 10 jours">+10j</button>
+      <button className="link-button" disabled={busy} onClick={() => extend({ extendDays: 30 })} title="Prolonger de 30 jours">+30j</button>
+      <button className="link-button" disabled={busy} onClick={() => extend({ extendDays: 365 })} title="Prolonger d'un an">+1 an</button>
+      <button className="link-button" disabled={busy} onClick={() => extend({ unlimited: true })} title="Retirer toute expiration">∞</button>
     </div>
   );
 }

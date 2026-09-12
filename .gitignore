@@ -21,3 +21,6 @@ run-build.cmd
 .audit.json
 coverage/
 .vitest/
+
+backups/
+

@@ -1,0 +1,32 @@
+name: Maintenance quotidienne
+
+on:
+  schedule:
+    - cron: '30 3 * * *' # tous les jours à 03:30 UTC
+  workflow_dispatch:
+
+jobs:
+  backup-and-monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Sauvegarde JSON de la base
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/backup.mjs
+      - name: Upload de la sauvegarde (artefact 30 jours)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup
+          path: backups/*.json
+          retention-days: 30
+      - name: Surveillance des expirations d'abonnements
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/check-billing.mjs || echo "::warning::Des abonnements expirent bientôt ou sont expirés — voir le log au-dessus."

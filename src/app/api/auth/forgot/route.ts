@@ -10,6 +10,11 @@ function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
 }
 
+/** Échappe les caractères HTML pour éviter toute injection dans les e-mails. */
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+}
+
 /**
  * POST /api/auth/forgot — demande une réinitialisation de mot de passe.
  *
@@ -46,7 +51,32 @@ export async function POST(request: Request) {
     const base = process.env.NEXT_PUBLIC_APP_URL?.trim() || new URL(request.url).origin;
     const resetUrl = `${base.replace(/\/+$/, '')}/reset?token=${token}`;
 
-    return NextResponse.json({ ok: true, message: 'Lien de réinitialisation créé (usage unique, 24 h).', resetUrl });
+    // Envoi réel de l'e-mail si le SMTP est configuré ; sinon le lien est
+    // renvoyé dans la réponse pour transmission manuelle par le super admin.
+    const { sendMail, mailTemplate, isMailConfigured } = await import('../../../../lib/mailer');
+    let emailed = false;
+    if (isMailConfigured()) {
+      const result = await sendMail(
+        user.email,
+        'Réinitialisation de votre mot de passe — MAR-CI FLOW',
+        mailTemplate(
+          'Réinitialisation de votre mot de passe',
+          `<p>Bonjour <strong>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</strong>,</p>
+           <p>Vous avez demandé la réinitialisation de votre mot de passe. Ce lien unique est valable <strong>24 heures</strong> et ne peut être utilisé qu'une seule fois.</p>
+           <p>Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail — votre mot de passe actuel reste valable.</p>`,
+          { label: 'Choisir un nouveau mot de passe', url: resetUrl },
+        ),
+      );
+      emailed = result.sent;
+    }
+
+    return NextResponse.json({
+      ok: true,
+      message: emailed
+        ? 'Lien de réinitialisation envoyé par e-mail (usage unique, 24 h).'
+        : 'Lien de réinitialisation créé (usage unique, 24 h). Transmettez-le au membre.',
+      resetUrl: emailed ? undefined : resetUrl,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: 'Email invalide.' }, { status: 400 });
     return NextResponse.json({ error: 'Impossible de traiter la demande.' }, { status: 400 });

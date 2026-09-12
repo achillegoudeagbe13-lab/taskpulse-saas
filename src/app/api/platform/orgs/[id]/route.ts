@@ -94,6 +94,53 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 /**
+ * PUT — Gestion de l'abonnement d'une organisation (super admin) :
+ * - prolonger / fixer l'expiration (+10 j, +30 j, +1 an, ou illimité) ;
+ * - optionnel : passer la durée à null (usage illimité, jamais expiré).
+ */
+const putSchema = z.object({
+  extendDays: z.number().int().min(0).max(3650).optional(),
+  unlimited: z.boolean().optional(),
+});
+
+export async function PUT(request: Request, { params }: Params) {
+  const auth = await requirePlatformSuperAdmin();
+  if (auth.error) return auth.error;
+
+  try {
+    const input = putSchema.parse(await request.json());
+    const existing = await prisma.organization.findUnique({ where: { id: params.id } });
+    if (!existing) return NextResponse.json({ error: 'Organisation introuvable.' }, { status: 404 });
+
+    let planExpiresAt: Date | null;
+    if (input.unlimited) {
+      planExpiresAt = null;
+    } else {
+      const current = existing.planExpiresAt && existing.planExpiresAt > new Date() ? existing.planExpiresAt.getTime() : Date.now();
+      planExpiresAt = new Date(current + (input.extendDays ?? 0) * 24 * 60 * 60 * 1000);
+    }
+
+    const updated = await prisma.organization.update({
+      where: { id: params.id },
+      data: { planExpiresAt, planStatus: 'ACTIVE' },
+    });
+    await writeAudit(auth.ctx.user.id, input.unlimited ? 'ABONNEMENT_ILLIMITE' : 'PROLONGATION_ABONNEMENT', 'Organization', params.id, {
+      name: existing.name,
+      extendDays: input.extendDays ?? null,
+      newExpiresAt: updated.planExpiresAt?.toISOString() ?? null,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      organization: { id: updated.id, planStatus: updated.planStatus, planExpiresAt: updated.planExpiresAt?.toISOString() ?? null },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) return NextResponse.json({ error: 'Paramètres de prolongation invalides.' }, { status: 400 });
+    return NextResponse.json({ error: 'Prolongation impossible.' }, { status: 500 });
+  }
+}
+
+/**
  * DELETE — Suppression définitive de l'organisation.
  * Les memberships et invitations sont supprimés (cascade), les données
  * métier sont détachées (organizationId → NULL via FK ON DELETE SET NULL).

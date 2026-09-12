@@ -68,10 +68,36 @@ export async function POST(request: Request) {
     });
     await writeAudit(auth.ctx.user.id, 'CREATION_INVITATION', 'Invitation', invitation.id, { role: input.role, organizationId: auth.ctx.organizationId });
 
+    // Lien d'invitation absolu (base = origine de la requête).
+    const base = process.env.NEXT_PUBLIC_APP_URL?.trim() || new URL(request.url).origin;
+    const inviteUrl = `${base.replace(/\/+$/, '')}/rejoindre?token=${invitation.token}`;
+
+    // Envoi de l'invitation par e-mail si une adresse est fournie et SMTP configuré.
+    let emailed = false;
+    if (input.email) {
+      const { sendMail, mailTemplate, isMailConfigured } = await import('../../../lib/mailer');
+      if (isMailConfigured()) {
+        const name = [input.firstName, input.lastName].filter(Boolean).join(' ');
+        const result = await sendMail(
+          input.email,
+          'Invitation à rejoindre votre équipe sur MAR-CI FLOW',
+          mailTemplate(
+            'Vous êtes invité(e) à rejoindre une équipe',
+            `<p>Bonjour ${name ? `<strong>${name}</strong>` : ''},</p>
+             <p><strong>${auth.ctx.user.firstName} ${auth.ctx.user.lastName}</strong> vous invite à rejoindre son espace <strong>${auth.ctx.organization?.name ?? 'MAR-CI FLOW'}</strong> sur MAR-CI FLOW (rôle : ${input.role === 'INTERN' ? 'stagiaire' : 'employé'}).</p>
+             <p>Ce lien d'invitation est valable 7 jours.</p>`,
+            { label: 'Rejoindre l’équipe', url: inviteUrl },
+          ),
+        );
+        emailed = result.sent;
+      }
+    }
+
     return NextResponse.json({
       invitation,
-      // Lien de join à transmettre au futur membre (pas d'envoi d'email dans cette itération).
-      inviteUrl: `/rejoindre?token=${invitation.token}`,
+      // Lien de join à transmettre au futur membre si l'e-mail n'a pas pu être envoyé.
+      inviteUrl: emailed ? undefined : `/rejoindre?token=${invitation.token}`,
+      emailed,
       expiresAt: invitation.expiresAt.toISOString(),
     }, { status: 201 });
   } catch (error) {
