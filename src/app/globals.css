@@ -62,7 +62,7 @@ tbody tr:hover{background:#fafbff}
 .activity-stream{display:grid;gap:14px}
 .activity-card{padding:20px}
 .activity-card-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
-.activity-card-head .avatar{width:34px;height:34px}
+.activity-card-head .avatar{width:40px;height:40px}
 .activity-card-head div{flex:1;min-width:0}
 .activity-card-head div strong,.activity-card-head div small{display:block}
 .activity-card-head div strong{font-size:13px}

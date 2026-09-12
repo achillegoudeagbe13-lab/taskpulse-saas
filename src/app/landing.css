@@ -64,11 +64,12 @@
 @media(max-width:560px){.landing-grid{grid-template-columns:1fr}.landing{padding:20px 16px 40px;gap:40px}}
 
 /* --- Rendu des avatars / photos --- */
-.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:linear-gradient(135deg,#eef2ff,#dfe7ff);color:var(--blue)}
-.avatar-lg{width:76px;height:76px;font-size:26px;background:linear-gradient(135deg,#eef2ff,#dfe7ff);color:var(--blue)}
+.avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:linear-gradient(135deg,#eef2ff,#dfe7ff);color:var(--blue);flex-shrink:0}
+/* Vignette de profil : réduit drastiquement à ~40px, discrète, jamais un élément central */
+.avatar-lg{width:40px;height:40px;font-size:14px;background:linear-gradient(135deg,#eef2ff,#dfe7ff);color:var(--blue)}
 .avatar-upload-row{display:flex;align-items:center;gap:18px;margin-bottom:14px}
 .avatar-upload-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.top-avatar{width:34px;height:34px;font-size:12px}
+.top-avatar{width:40px;height:40px;font-size:13px}
 
 /* --- Abonnement / activation / paliers --- */
 .plan-lock{max-width:540px;margin:40px auto;padding:26px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}

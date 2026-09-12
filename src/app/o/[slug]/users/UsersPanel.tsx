@@ -204,9 +204,9 @@ export default function UsersPanel({
                     <div className="flex items-center gap-3">
                       {member.user.photoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={member.user.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        <img src={member.user.photoUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                       ) : (
-                        <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+                        <span className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                           {safeStr(member.user.firstName).charAt(0)}{safeStr(member.user.lastName).charAt(0) || '?'}
                         </span>
                       )}
