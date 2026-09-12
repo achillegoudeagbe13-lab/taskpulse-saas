@@ -41,3 +41,15 @@ export async function checkInviteSeatCapacity(orgId: string, planTier: PlanTier 
   }
   return null;
 }
+
+/**
+ * État d'abonnement « vivant » d'une organisation : le statut stocké en base
+ * ET l'expiration réelle de la période payée (planExpiresAt) sont combinés.
+ * À utiliser partout où un contrôle serveur est nécessaire (invitations, etc.)
+ * au lieu de lire planStatus brut, sinon une org expirée peut agir normalement.
+ */
+export function subscriptionExpired(org: { planStatus: string; planExpiresAt: Date | null }): boolean {
+  if (org.planStatus !== 'ACTIVE') return false; // déjà EXPIRED/LOCKED côté base
+  if (org.planExpiresAt && org.planExpiresAt.getTime() <= Date.now()) return true;
+  return false;
+}

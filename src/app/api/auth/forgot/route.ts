@@ -41,7 +41,10 @@ export async function POST(request: Request) {
     });
 
     await writeAudit(user.id, 'DEMANDE_RESET_MOT_DE_PASSE', 'User', user.id);
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/reset?token=${token}`;
+    // URL absolue : on part de l'origine de la requête (fonctionne en prod comme
+    // en local) si NEXT_PUBLIC_APP_URL n'est pas défini.
+    const base = process.env.NEXT_PUBLIC_APP_URL?.trim() || new URL(request.url).origin;
+    const resetUrl = `${base.replace(/\/+$/, '')}/reset?token=${token}`;
 
     return NextResponse.json({ ok: true, message: 'Lien de réinitialisation créé (usage unique, 24 h).', resetUrl });
   } catch (error) {

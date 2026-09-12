@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { requireOrgAdmin } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { writeAudit } from '../../../lib/audit';
-import { checkInviteSeatCapacity } from '../../../lib/billing';
+import { checkInviteSeatCapacity, subscriptionExpired } from '../../../lib/billing';
 
 const INVITE_DAYS = 7;
 
@@ -26,8 +26,13 @@ export async function POST(request: Request) {
   const auth = await requireOrgAdmin();
   if (auth.error) return auth.error;
 
-  // --- Monétisation : blocage en cas d'abonnement verrouillé ---
-  if (auth.ctx.organization.planStatus !== 'ACTIVE') {
+  // --- Monétisation : blocage en cas d'abonnement verrouillé ou expiré ---
+  // On combine planStatus ET l'expiration réelle (planExpiresAt), sinon une
+  // organisation dont l'abonnement a expiré peut continuer à inviter.
+  if (
+    auth.ctx.organization.planStatus !== 'ACTIVE' ||
+    subscriptionExpired(auth.ctx.organization)
+  ) {
     return NextResponse.json({
       error: 'Votre abonnement est expiré ou verrouillé. Saisissez un code d’activation pour continuer.',
       locked: true,
