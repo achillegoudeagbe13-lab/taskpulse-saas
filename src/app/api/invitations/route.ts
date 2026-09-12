@@ -76,10 +76,8 @@ export async function POST(request: Request) {
     }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues[0]?.message ?? 'Invitation invalide.' }, { status: 400 });
-    // TEMP-DEBUG: détail temporaire pour diagnostic, à retirer après investigation.
-    const debug = error instanceof Error ? error.message : String(error);
-    console.error('[invitations:POST] échec création:', debug);
-    return NextResponse.json({ error: 'Impossible de créer cette invitation.', debug }, { status: 400 });
+    console.error('[invitations:POST] échec création:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Impossible de créer cette invitation.' }, { status: 400 });
   }
 }
 
