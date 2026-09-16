@@ -8,7 +8,7 @@ import { join } from 'path';
 
 const prisma = new PrismaClient();
 
-const [users, organizations, memberships, tasks, activities, announcements, attendances, journalEntries, messages, invitations, licenseCodes, passwordResets] = await Promise.all([
+const [users, organizations, memberships, tasks, activities, announcements, attendances, journalEntries, messages, invitations, licenseCodes, passwordResets, meetingRooms] = await Promise.all([
   prisma.user.findMany(),
   prisma.organization.findMany(),
   prisma.membership.findMany(),
@@ -21,6 +21,7 @@ const [users, organizations, memberships, tasks, activities, announcements, atte
   prisma.invitation.findMany(),
   prisma.licenseCode.findMany(),
   prisma.passwordReset.findMany(),
+  prisma.meetingRoom.findMany(),
 ]);
 
 const backup = {
@@ -38,6 +39,7 @@ const backup = {
   invitations,
   licenseCodes,
   passwordResets, // hashes uniquement (jamais de mot de passe en clair)
+  meetingRooms, // salles de visioconférence (Jitsi) de chaque organisation
 };
 
 const dir = join(process.cwd(), 'backups');

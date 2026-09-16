@@ -105,6 +105,7 @@ model Department {
   organizationId String?
   users          User[]
   tasks          Task[]
+  meetingRooms   MeetingRoom[]
   createdAt      DateTime      @default(now())
 
   @@unique([organizationId, name])
@@ -153,6 +154,7 @@ model Organization {
   journalEntries JournalEntry[]
   journalCategories JournalCategory[]
   meetings       Meeting[]
+  meetingRooms   MeetingRoom[]
   leaveRequests  LeaveRequest[]
 }
 
@@ -231,6 +233,7 @@ model User {
   memberships          Membership[]
   sentInvitations      Invitation[]
   createdMeetings      Meeting[]
+  createdMeetingRooms  MeetingRoom[]
   leaveRequests        LeaveRequest[]
   meetingAttendees     MeetingAttendee[]
   passwordResets       PasswordReset[]
@@ -525,6 +528,9 @@ model Meeting {
   startAt       DateTime
   endAt         DateTime
   meetingLink   String?
+  /// Salle de visioconférence réutilisable (Jitsi) rattachée à la réunion.
+  room          MeetingRoom?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  roomId        String?
   location      String?
   organization  Organization?     @relation(fields: [organizationId], references: [id])
   organizationId String?
@@ -537,6 +543,34 @@ model Meeting {
 
   @@index([organizationId])
   @@index([startAt])
+  @@index([roomId])
+}
+
+/// Salle de visioconférence Jitsi réutilisable.
+/// `roomName` est l'identifiant unique de la salle sur le domaine Jitsi
+/// (il forme l'URL https://<domain>/<roomName>) ; il sert aussi de clé de
+/// partage entre membres. Une salle peut être rattachée à un projet/équipe
+/// (Department) et marquée « par défaut » pour l'organisation.
+model MeetingRoom {
+  id             String        @id @default(cuid())
+  name           String
+  roomName       String        @unique
+  domain         String        @default("meet.jit.si")
+  isDefault      Boolean       @default(false)
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  department     Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  departmentId   String?
+  createdBy      User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById    String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  meetings       Meeting[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([departmentId])
 }
 
 model MeetingAttendee {

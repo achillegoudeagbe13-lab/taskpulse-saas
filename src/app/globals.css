@@ -650,3 +650,79 @@ button.dash-announce{font:inherit;color:inherit;cursor:pointer}
   .modal-body{max-height:calc(100dvh - 130px)}
   .notif-pop{max-height:calc(100dvh - 24px)}
 }
+/* =====================================================================
+   Visioconférence native (Jitsi Meet) — onglet, salles et lecteur intégré
+   ===================================================================== */
+.meeting-rooms-panel .page-heading{flex-wrap:wrap;gap:14px}
+.meeting-stage{position:relative;margin:18px 0 26px;border:1px solid var(--line);border-radius:var(--radius);background:#0f1728;padding:14px;box-shadow:var(--shadow-md);animation:popIn .2s ease}
+.meeting-rooms-section{margin-top:26px}
+.meeting-section-title{display:flex;align-items:center;gap:9px;font:600 16px 'Space Grotesk',sans-serif;margin:0 0 14px}
+.meeting-section-title .muted{font-weight:600;font-size:12.5px}
+
+/* ---- Cartes de salles ---- */
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.room-card{padding:18px;display:flex;flex-direction:column;gap:12px}
+.room-card.active{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft),var(--shadow-md)}
+.room-head{display:flex;align-items:center;gap:11px}
+.room-icon{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;background:var(--blue-soft);color:var(--blue);border:1px solid var(--blue-line)}
+.room-title{min-width:0;flex:1}
+.room-title strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room-title small{display:block;font-size:11.5px;margin-top:2px}
+.room-id{display:flex;align-items:center;gap:7px;margin:0;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--soft);border:1px dashed var(--line);border-radius:9px;padding:8px 10px;word-break:break-all}
+.room-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--muted)}
+.room-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+.room-actions .primary-button,.room-actions .outline-button{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;font-size:12px;font-weight:700;text-decoration:none}
+
+/* ---- Réunions planifiées (admin) ---- */
+.meeting-list{display:grid;gap:10px}
+.meeting-row{display:flex;align-items:center;gap:12px;justify-content:space-between;border:1px solid var(--line);border-radius:12px;background:#fff;padding:13px 15px;box-shadow:var(--shadow-sm)}
+.meeting-row-title{min-width:0}
+.meeting-row-title strong{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meeting-row-title small{display:block;font-size:11.5px;margin-top:2px}
+.meeting-row .outline-button{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;font-size:12px;font-weight:700}
+
+/* ---- Lecteur Jitsi intégré (composant VideoMeeting) ---- */
+.video-meeting{display:flex;flex-direction:column;gap:12px}
+.video-meeting-head{display:flex;align-items:center;gap:11px;color:#e8ecf6}
+.video-meeting-head strong{display:block;font-size:14px}
+.video-meeting-head small{display:block;font-size:11.5px;word-break:break-all}
+.video-live{width:10px;height:10px;border-radius:50%;flex:none;background:#64748b;box-shadow:0 0 0 4px rgba(100,116,139,.25)}
+.video-live.on{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.25);animation:videoPulse 1.8s infinite}
+@keyframes videoPulse{0%,100%{opacity:1}50%{opacity:.45}}
+.video-chip{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:11.5px;font-weight:700;color:#c7d2fe;background:rgba(79,70,229,.28);border:1px solid rgba(129,140,248,.4);border-radius:999px;padding:5px 11px}
+.video-stage{position:relative;width:100%;aspect-ratio:16/9;min-height:320px;background:#0b1220;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.video-iframe-host,.video-iframe-host>iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:26px;color:#e8ecf6;background:radial-gradient(600px 260px at 50% 0%,rgba(79,70,229,.28) 0%,transparent 70%),#0b1220}
+.video-overlay h3{margin:0;font:600 16px 'Space Grotesk',sans-serif}
+.video-overlay p{margin:0;max-width:420px;font-size:12.5px;line-height:1.55;color:#9fa8bb}
+.video-overlay .primary-button,.video-overlay .outline-button{display:inline-flex;align-items:center;gap:8px;margin-top:6px}
+.video-overlay-icon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:rgba(79,70,229,.22);border:1px solid rgba(129,140,248,.35);color:#c7d2fe}
+.video-overlay-icon.error{background:rgba(229,72,77,.18);border-color:rgba(229,72,77,.4);color:#fca5a5}
+.video-toolbar{display:flex;flex-wrap:wrap;gap:8px}
+.video-control{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;color:var(--ink-2);background:#fff;border:1px solid var(--line);transition:all .15s}
+.video-control:hover{border-color:var(--blue-line);color:var(--blue);background:var(--blue-soft)}
+.video-control.off{color:var(--red);border-color:#f3c1c1;background:var(--red-soft)}
+.video-control.danger{color:var(--red);border-color:#f3c1c1}
+.video-control.danger:hover{background:#fff0f0;border-color:#ef9b9b;color:#b91c1c}
+
+/* ---- Thème sombre ---- */
+:root[data-theme='dark'] .meeting-row{background:#121a2a;border-color:#283247}
+:root[data-theme='dark'] .room-id{background:#0f1728;border-color:#283247;color:#9fa8bb}
+:root[data-theme='dark'] .room-icon{background:#1a2440;border-color:#2d4275;color:#a5b4fc}
+:root[data-theme='dark'] .video-control{background:#121a2a;border-color:#2b3445;color:#cbd5e1}
+:root[data-theme='dark'] .video-control:hover{background:#1a2440;border-color:#2d4275;color:#a5b4fc}
+:root[data-theme='dark'] .video-control.off{background:#2a1418;border-color:#5b2a2e;color:#fca5a5}
+:root[data-theme='dark'] .video-control.danger{background:#121a2a;border-color:#5b2a2e;color:#fca5a5}
+:root[data-theme='dark'] .video-stage,:root[data-theme='dark'] .meeting-stage{border-color:#283247}
+
+/* ---- Responsive ---- */
+@media(max-width:900px){.room-grid{grid-template-columns:1fr}}
+@media(max-width:720px){
+  .video-stage{aspect-ratio:auto;height:min(72vh,560px);min-height:380px}
+  .video-meeting-head{flex-wrap:wrap}
+  .video-chip{margin-left:0}
+  .video-toolbar{gap:6px}
+  .video-control{flex:1;justify-content:center}
+  .room-actions .primary-button,.room-actions .outline-button{flex:1;justify-content:center}
+  .meeting-row{flex-wrap:wrap}
+}

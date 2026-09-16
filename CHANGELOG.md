@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.2] - 2026-09-15
+
+### Added
+- **Visioconférence native (Jitsi Meet) :**
+  - Composant réutilisable **`<VideoMeeting />`** (`src/app/video-meeting.tsx`) : API Iframe chargée à
+    la demande (`external_api.js`, sans dépendance npm), scène responsive (16/9 en desktop, hauteur
+    confortable en mobile), thème sombre, écouteurs d'événements (connexion, participants, micro/caméra,
+    `readyToClose`, erreurs), `dispose()` garanti au démontage, actions rejoindre / couper le micro /
+    couper la caméra / copier le lien / nouvel onglet / quitter.
+  - Typages dédiés (`src/types/jitsi.d.ts`) et utilitaires partagés (`src/lib/jitsi.ts` :
+    domaine, validation et URL de salle, chargeur singleton du script).
+  - Onglet **« Visioconférence »** dans la barre latérale (`src/app/meeting-rooms-panel.tsx`) +
+    **page dédiée** `/o/<slug>/reunions?room=<salle>` : le lien est partageable et rejoint
+    directement la salle demandée.
+  - Modèle Prisma **`MeetingRoom`** (nom, identifiant Jitsi unique, domaine, salle par défaut,
+    organisation, projet/équipe optionnel, créateur) et rattachement optionnel `Meeting.roomId`
+    (`meetingLink` reste supporté).
+  - API **`GET/POST /api/org/meeting-rooms`** et **`PATCH/DELETE /api/org/meeting-rooms/[id]`** :
+    lecture par tout membre, création/modification/suppression réservées à l'administrateur
+    d'organisation ; identifiant de salle généré côté serveur (unique et non devinable) ; audit.
+  - Les **réunions planifiées** dont le lien est une salle Jitsi sont rejoignables en un clic
+    depuis l'onglet (administrateurs).
+  - Le formulaire **« Planifier une réunion »** (calendrier) permet de choisir une salle Jitsi :
+    le lien et `Meeting.roomId` sont renseignés automatiquement (le lien visio libre reste possible).
+  - `NEXT_PUBLIC_JITSI_DOMAIN` documenté dans `.env.example` pour un Jitsi auto-hébergé.
+- `scripts/backup.mjs` : la sauvegarde JSON inclut désormais la table `meetingRooms`.
+
+### Notes
+- **Migration base requise avant mise en ligne : `npx prisma db push`** (nouvelle table
+  `MeetingRoom` + colonne `Meeting.roomId`), déjà couvert par le `preDeployCommand` Render.
+
+### Validation
+- `npx prisma validate` : schéma valide ; `npx prisma generate` : client régénéré.
+- Type-check `tsc --noEmit` : 0 erreur.
+
 ## [v7.1] - 2026-09-13
 
 ### Added

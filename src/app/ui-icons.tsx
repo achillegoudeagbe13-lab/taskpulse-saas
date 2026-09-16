@@ -59,3 +59,13 @@ export const Key = (props: IconProps) => <Icon {...props}><circle cx="7.5" cy="1
 export const Sparkles = (props: IconProps) => <Icon {...props}><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z" /><path d="M19 15l.9 2.4L22 18l-2.1.6L19 21l-.9-2.4L16 18l2.1-.6L19 15Z" /></Icon>;
 export const Sun = (props: IconProps) => <Icon {...props}><circle cx="12" cy="12" r="4" /><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" /></Icon>;
 export const Moon = (props: IconProps) => <Icon {...props}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></Icon>;
+
+/* --- Visioconférence (Jitsi Meet) --- */
+export const Video = (props: IconProps) => <Icon {...props}><rect x="2" y="6" width="14" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3z" /></Icon>;
+export const VideoOff = (props: IconProps) => <Icon {...props}><path d="M22 7v10l-5-3v2.5A2.5 2.5 0 0 1 14.5 19h-9M2 6.5A2.5 2.5 0 0 1 4.5 4h8" /><path d="M2 2l20 20M2 9v7a2 2 0 0 0 2 2" /></Icon>;
+export const Mic = (props: IconProps) => <Icon {...props}><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" /></Icon>;
+export const MicOff = (props: IconProps) => <Icon {...props}><path d="M15 9.5V6a3 3 0 0 0-5.9-.7M9 9.5V12a3 3 0 0 0 5 2.2" /><path d="M5 11a7 7 0 0 0 11.3 5.6M12 18v4M8 22h8M2 2l20 20" /></Icon>;
+export const PhoneOff = (props: IconProps) => <Icon {...props}><path d="M3 3l18 18" /><path d="M5.4 13.3a2 2 0 0 1 .4-2.2l1.4-1.4a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7M11.7 5.2a2 2 0 0 1 2.2.4l1.4 1.4a2 2 0 0 1 .5 2.1c-.3.9-.6 1.8-.7 2.7M14.6 16.6a2 2 0 0 0 .5 2.1l1.4 1.4" /><path d="M2.1 4.2 4.2 2.1l1.6 1.6M20 15.8l1.9 1.9-2.1 2.1-1.6-1.6" /></Icon>;
+export const Copy = (props: IconProps) => <Icon {...props}><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></Icon>;
+export const Link2 = (props: IconProps) => <Icon {...props}><path d="M9 15l6-6M11 6l1-1a4 4 0 0 1 6 6l-1 1M13 18l-1 1a4 4 0 0 1-6-6l1-1" /></Icon>;
+export const ExternalLink = (props: IconProps) => <Icon {...props}><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></Icon>;

@@ -20,6 +20,7 @@ import OrgSettingsPanel from '../../org-settings-panel';
 import UsersPanel from './users/UsersPanel';
 import NotificationBell from '../../notification-bell';
 import CalendarPanel from '../../calendar-panel';
+import MeetingRoomsPanel from '../../meeting-rooms-panel';
 import AIAssistant from '../../ai-assistant';
 import PlanLock, { type OrgPlan } from '../../plan-lock';
 import { Moon, Sun } from '../../ui-icons';
@@ -28,7 +29,7 @@ import { Moon, Sun } from '../../ui-icons';
 import {
   LayoutDashboard, MessageSquare, Bell, Activity, BookOpen,
   Clock3, Settings, Users, ShieldCheck, ChevronRight, LogOut, Menu, X,
-  KanbanSquare, UserRound, BarChart3, Building2, HelpCircle, Calendar, Sparkles,
+  KanbanSquare, UserRound, BarChart3, Building2, HelpCircle, Calendar, Sparkles, Video,
 } from '../../ui-icons';
 
 type User = {
@@ -53,6 +54,7 @@ const MEMBER_TABS = [
   { id: 'Dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'Tâches', label: 'Tâches', icon: KanbanSquare },
   { id: 'Calendrier', label: 'Calendrier', icon: Calendar },
+  { id: 'Visioconférence', label: 'Visioconférence', icon: Video },
   { id: 'Pointage', label: 'Pointage', icon: Clock3 },
   { id: 'Messages', label: 'Messages', icon: MessageSquare },
   { id: 'Annonces', label: 'Annonces', icon: Bell },
@@ -74,15 +76,19 @@ const ADMIN_TABS = [
 ];
 
 export default function AppLayout({
-  user, organization, organizationId, orgRole, isPlatformSuperAdmin,
+  user, organization, organizationId, orgRole, isPlatformSuperAdmin, initialPage, initialRoom,
 }: {
   user: any;
   organization: { id: string; name: string; slug: string } | null;
   organizationId: string | null;
   orgRole: string | null;
   isPlatformSuperAdmin: boolean;
+  /** Onglet ouvert au chargement (utilisé par les pages dédiées, ex. /o/<slug>/reunions). */
+  initialPage?: string;
+  /** Salle de visioconférence à rejoindre directement (paramètre `?room=`). */
+  initialRoom?: string | null;
 }) {
-  const [activePage, setActivePage] = useState('Dashboard');
+  const [activePage, setActivePage] = useState(initialPage ?? 'Dashboard');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => ((typeof window !== 'undefined' && (localStorage.getItem('mcf-theme') as any)) || 'light'));
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -132,9 +138,17 @@ export default function AppLayout({
   function goTo(page: string) {
     setActivePage(page);
     setDrawerOpen(false);
+    // Les pages dédiées (ex. /o/<slug>/reunions) ne correspondent qu'à un onglet :
+    // on revient à l'URL de l'espace de travail dès qu'on change d'onglet.
+    if (typeof window !== 'undefined' && organization?.slug && page !== initialPage) {
+      const root = `/o/${organization.slug}`;
+      if (window.location.pathname !== root) {
+        try { window.history.replaceState(null, '', root); } catch { /* no-op */ }
+      }
+    }
   }
 
-    const ctx = { user, organization, organizationId, orgRole, isPlatformSuperAdmin, onNavigate: goTo };
+    const ctx = { user, organization, organizationId, orgRole, isPlatformSuperAdmin, onNavigate: goTo, initialRoom: initialRoom ?? null };
   const tabs = orgRole === 'ORGANIZATION_ADMIN' ? ADMIN_TABS : MEMBER_TABS;
 
   // Abonnement verrouillé → on masque l'espace de travail au profit de l'écran d'activation.
@@ -283,7 +297,7 @@ function LogoutButton() {
 
 function renderContent(
   page: string,
-  ctx: { user: User; organization: { id: string; name: string; slug: string } | null; organizationId: string | null; orgRole: string | null; isPlatformSuperAdmin: boolean },
+  ctx: { user: User; organization: { id: string; name: string; slug: string } | null; organizationId: string | null; orgRole: string | null; isPlatformSuperAdmin: boolean; initialRoom?: string | null },
   setPage: (p: string) => void,
 ) {
   const user = ctx.user;
@@ -294,6 +308,15 @@ function renderContent(
       return <TasksPanel admin={ctx.orgRole === 'ORGANIZATION_ADMIN'} currentUserId={ctx.user.id} />;
     case 'Calendrier':
       return <CalendarPanel user={user as any} orgRole={ctx.orgRole} />;
+    case 'Visioconférence':
+      return (
+        <MeetingRoomsPanel
+          admin={ctx.orgRole === 'ORGANIZATION_ADMIN'}
+          orgSlug={ctx.organization?.slug ?? ''}
+          user={{ id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email }}
+          defaultRoom={ctx.initialRoom ?? null}
+        />
+      );
     case 'Pointage':
       return <AttendancePanel />;
     case 'Messages':
