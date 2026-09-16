@@ -156,6 +156,10 @@ model Organization {
   meetings       Meeting[]
   meetingRooms   MeetingRoom[]
   leaveRequests  LeaveRequest[]
+  timeEntries    TimeEntry[]
+  activityEvents ActivityEvent[]
+  meetingNotes   MeetingNote[]
+  projectDocuments ProjectDocument[]
 }
 
 model Membership {
@@ -237,6 +241,11 @@ model User {
   leaveRequests        LeaveRequest[]
   meetingAttendees     MeetingAttendee[]
   passwordResets       PasswordReset[]
+  timeEntries          TimeEntry[]
+  activityEvents       ActivityEvent[]
+  meetingNotesAuthored MeetingNote[]   @relation("MeetingNoteAuthor")
+  meetingNotesEdited   MeetingNote[]   @relation("MeetingNoteEditor")
+  uploadedDocuments    ProjectDocument[]
 }
 
 model WorkJournal {
@@ -365,6 +374,8 @@ model Task {
   updatedAt    DateTime     @updatedAt
   comments     TaskComment[]
   journalEntries JournalEntry[]
+  timeEntries    TimeEntry[]
+  documents      ProjectDocument[]
 }
 
 model TaskComment {
@@ -540,6 +551,7 @@ model Meeting {
   updatedAt     DateTime @updatedAt
 
   attendees     MeetingAttendee[]
+  notes         MeetingNote[]
 
   @@index([organizationId])
   @@index([startAt])
@@ -615,4 +627,108 @@ model LicenseCode {
 
   @@index([tier])
   @@index([status])
+}
+
+/// Entrée de suivi du temps : chronomètre (mode TIMER, endedAt null tant
+/// que lancé) ou saisie manuelle (mode MANUAL, durée en minutes).
+enum TimeEntryMode {
+  TIMER
+  MANUAL
+}
+
+model TimeEntry {
+  id             String        @id @default(cuid())
+  mode           TimeEntryMode @default(TIMER)
+  task           Task?         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId         String?
+  /// Nom du projet (champ libre de Task.project) pour agréger par projet.
+  projectName    String?
+  /// Titre figé de la tâche au moment de l'entrée (résiste aux renommages/suppressions).
+  taskTitle      String?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  startedAt      DateTime
+  endedAt        DateTime?
+  /// Durée en minutes (saisie manuelle uniquement).
+  minutes        Int?
+  note           String?
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId, startedAt])
+  @@index([userId, startedAt])
+  @@index([taskId])
+}
+
+/// Événement du fil d'activité d'équipe : action clé tracée automatiquement
+/// (création/modification de tâche, note, livrable, entrée de temps…).
+model ActivityEvent {
+  id             String        @id @default(cuid())
+  action         String // ex: TASK_CREATED, TASK_UPDATED, NOTE_UPDATED, DOCUMENT_ADDED, TIME_LOGGED
+  entityType     String // Task | MeetingNote | ProjectDocument | TimeEntry
+  entityId       String?
+  summary        String // Phrase lisible prête à afficher
+  /// Nom du projet concerné (champ libre), pour filtrer le fil par projet.
+  projectName    String?
+  metadata       String? // JSON libre
+  actor          User          @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actorId        String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([projectName])
+}
+
+/// Note collaborative de réunion : document partagé lié à une réunion/salle
+/// Jitsi et/ou un projet. Éditable par tous les membres de l'organisation,
+/// avec traçabilité du dernier éditeur.
+model MeetingNote {
+  id             String        @id @default(cuid())
+  title          String
+  content        String        @default("")
+  meeting        Meeting?      @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  meetingId      String?
+  /// Identifiant de salle Jitsi (roomName) si la note est rattachée à une visio.
+  roomName       String?
+  /// Nom du projet (champ libre) auquel rattacher le compte-rendu.
+  projectName    String?
+  author         User          @relation("MeetingNoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId       String
+  lastEditedBy   User?         @relation("MeetingNoteEditor", fields: [lastEditedById], references: [id], onDelete: SetNull)
+  lastEditedById String?
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId, updatedAt])
+  @@index([meetingId])
+  @@index([roomName])
+}
+
+/// Livrable partagé : lien externe ou fichier (via URL de stockage) attaché
+/// à un projet (nom libre) et/ou une tâche.
+model ProjectDocument {
+  id             String        @id @default(cuid())
+  name           String
+  url            String
+  /// LINK = lien externe ; FILE = fichier hébergé (URL de stockage).
+  kind           String        @default("LINK")
+  description    String?
+  /// Nom du projet (champ libre) auquel rattacher le livrable.
+  projectName    String?
+  task           Task?         @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  taskId         String?
+  uploadedBy     User          @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedById   String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId, projectName])
+  @@index([taskId])
 }

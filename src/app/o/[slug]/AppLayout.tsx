@@ -21,9 +21,13 @@ import UsersPanel from './users/UsersPanel';
 import NotificationBell from '../../notification-bell';
 import CalendarPanel from '../../calendar-panel';
 import MeetingRoomsPanel from '../../meeting-rooms-panel';
+import TimeTrackingPanel from '../../time-tracking-panel';
+import ActivityFeedPanel from '../../activity-feed-panel';
+import MeetingNotesPanel from '../../meeting-notes-panel';
+import DocumentsPanel from '../../documents-panel';
 import AIAssistant from '../../ai-assistant';
 import PlanLock, { type OrgPlan } from '../../plan-lock';
-import { Moon, Sun } from '../../ui-icons';
+import { Moon, Sun, PlayCircle, FileText, Link2 } from '../../ui-icons';
 
 
 import {
@@ -55,6 +59,10 @@ const MEMBER_TABS = [
   { id: 'Tâches', label: 'Tâches', icon: KanbanSquare },
   { id: 'Calendrier', label: 'Calendrier', icon: Calendar },
   { id: 'Visioconférence', label: 'Visioconférence', icon: Video },
+  { id: 'Suivi du temps', label: 'Suivi du temps', icon: PlayCircle },
+  { id: 'Fil activité', label: "Fil d'activité", icon: Activity },
+  { id: 'Notes de réunion', label: 'Notes de réunion', icon: FileText },
+  { id: 'Livrables', label: 'Livrables', icon: Link2 },
   { id: 'Pointage', label: 'Pointage', icon: Clock3 },
   { id: 'Messages', label: 'Messages', icon: MessageSquare },
   { id: 'Annonces', label: 'Annonces', icon: Bell },
@@ -317,6 +325,14 @@ function renderContent(
           defaultRoom={ctx.initialRoom ?? null}
         />
       );
+    case 'Suivi du temps':
+      return <TimeTrackingPanel isAdmin={ctx.orgRole === 'ORGANIZATION_ADMIN'} />;
+    case 'Fil activité':
+      return <ActivityFeedPanel />;
+    case 'Notes de réunion':
+      return <MeetingNotesPanel />;
+    case 'Livrables':
+      return <DocumentsPanel isAdmin={ctx.orgRole === 'ORGANIZATION_ADMIN'} />;
     case 'Pointage':
       return <AttendancePanel />;
     case 'Messages':

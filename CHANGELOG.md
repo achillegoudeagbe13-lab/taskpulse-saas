@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.3] - 2026-09-15
+
+### Added
+- **Suivi du temps :**
+  - Modèle Prisma **`TimeEntry`** (mode `TIMER`/`MANUAL`, `startedAt`/`endedAt`, `minutes`, note,
+    rattachement tâche + projet, organisation) avec index de performance.
+  - API **`GET/POST /api/time-entries`** (liste + agrégats par tâche et par projet, chrono en cours
+    via `?running=1`), **`DELETE /api/time-entries/[id]`**, **`POST /api/time-entries/[id]/stop`**
+    (arrêt du chrono avec calcul de durée). Un seul chrono actif par utilisateur.
+  - Onglet **« Suivi du temps »** (`src/app/time-tracking-panel.tsx`) : chrono en direct, saisie
+    manuelle, totaux par tâche/projet, historique ; vue équipe pour les administrateurs.
+- **Fil d'activité :**
+  - Modèle Prisma **`ActivityEvent`** (acteur, action, entité, résumé, projet) + helper
+    **`recordActivity()`** (`src/lib/activity.ts`) branché sur tâches, temps, notes et livrables.
+  - API **`GET /api/activity-feed`** avec polling incrémental (`?since=`, `?project=`).
+  - Onglet **« Fil d'activité »** (`src/app/activity-feed-panel.tsx`) : rafraîchissement
+    automatique toutes les 15 s, déduplication, tri chronologique.
+- **Notes collaboratives de réunion (comptes-rendus) :**
+  - Modèle Prisma **`MeetingNote`** lié à une réunion planifiée et/ou une salle Jitsi (`roomName`)
+    et/ou un projet, avec auteur et **dernier éditeur**.
+  - API **`GET/POST /api/meeting-notes`** et **`GET/PATCH/DELETE /api/meeting-notes/[id]`**
+    (édition partagée, suppression auteur/admin).
+  - Onglet **« Notes de réunion »** (`src/app/meeting-notes-panel.tsx`) : création liée aux
+    réunions Jitsi, éditeur partagé re-synchronisé toutes les 10 s.
+- **Documents & livrables :**
+  - Modèle Prisma **`ProjectDocument`** (lien ou fichier, description, projet, tâche optionnelle).
+  - API **`GET/POST /api/project-documents`** (filtre par projet) et
+    **`DELETE /api/project-documents/[id]`** (auteur/admin).
+  - Onglet **« Livrables »** (`src/app/documents-panel.tsx`) : partage, filtres par projet, ouverture.
+- **Pages dédiées** accessibles par URL directe : `/o/<slug>/temps`, `/activite`, `/notes`,
+  `/livrables` (garde `requireOrgMember` + redirection sur le slug actif).
+- Onglets ajoutés dans `AppLayout` pour les quatre modules (visibles par tous les membres).
+
+### Notes
+- **Base : `npx prisma db push` appliqué** (tables `TimeEntry`, `ActivityEvent`, `MeetingNote`,
+  `ProjectDocument` + relations) — opération purement additive, aucune donnée impactée.
+
+### Validation
+- `npx prisma validate` + `prisma generate` + `prisma db push` : OK.
+- Type-check `tsc --noEmit` : 0 erreur ; `npm run build` : succès (8 nouvelles routes API).
+
 ## [v7.2] - 2026-09-15
 
 ### Added

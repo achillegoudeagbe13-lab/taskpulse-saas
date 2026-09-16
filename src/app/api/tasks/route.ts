@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { isMemberOf, requireOrgAdmin, requireOrgMember } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
+import { recordActivity } from '../../../lib/activity';
 
 const taskSchema = z.object({ title: z.string().trim().min(1).max(160), description: z.string().max(4000).optional(), assigneeId: z.string().optional(), dueDate: z.string().optional(), priority: z.enum(['BASSE', 'MOYENNE', 'HAUTE']).default('MOYENNE'), status: z.enum(['TERMINE', 'EN_COURS', 'BLOQUE', 'EN_ATTENTE']).default('EN_ATTENTE'), progress: z.coerce.number().int().min(0).max(100).default(0) });
 
@@ -33,6 +34,11 @@ export async function POST(request: Request) {
     const progress = input.status === 'TERMINE' ? 100 : input.progress;
     const task = await prisma.task.create({ data: { title: input.title, description: input.description, assigneeId: assignee?.id ?? null, creatorId: auth.ctx.user.id, organizationId: auth.ctx.organizationId, dueDate: input.dueDate ? new Date(input.dueDate) : null, priority: input.priority, status: input.status, progress } });
     if (assignee) await prisma.notification.create({ data: { userId: assignee.id, organizationId: auth.ctx.organizationId, title: 'Nouvelle tâche', content: `La tâche « ${task.title} » vous a été attribuée.` } });
+    recordActivity({
+      organizationId: auth.ctx.organizationId, actorId: auth.ctx.user.id,
+      action: 'TASK_CREATED', entityType: 'Task', entityId: task.id,
+      summary: `a créé la tâche « ${task.title} »`, projectName: task.project,
+    });
     return NextResponse.json({ task }, { status: 201 });
   } catch (error) { return NextResponse.json({ error: error instanceof z.ZodError ? error.issues[0]?.message : 'Impossible de créer la tâche.' }, { status: 400 }); }
 }
@@ -51,6 +57,11 @@ export async function PATCH(request: Request) {
       if (auth.ctx.orgRole === 'ORGANIZATION_ADMIN') return NextResponse.json({ error: 'Les tâches ouvertes sont prises en charge par les membres de l’équipe.' }, { status: 403 });
       if (existing.assigneeId) return NextResponse.json({ error: 'Cette tâche est déjà prise en charge.' }, { status: 409 });
       const task = await prisma.task.update({ where: { id: input.id }, data: { assigneeId: auth.ctx.user.id, status: existing.status === 'EN_ATTENTE' ? 'EN_COURS' : existing.status } });
+      recordActivity({
+        organizationId: auth.ctx.organizationId, actorId: auth.ctx.user.id,
+        action: 'TASK_UPDATED', entityType: 'Task', entityId: task.id,
+        summary: `a pris en charge la tâche « ${existing.title} »`, projectName: existing.project,
+      });
       if (existing.creatorId !== auth.ctx.user.id && (await isMemberOf(existing.creatorId, auth.ctx.organizationId))) {
         await prisma.notification.create({ data: { userId: existing.creatorId, organizationId: auth.ctx.organizationId, title: 'Tâche prise en charge', content: `${auth.ctx.user.firstName} ${auth.ctx.user.lastName} a commencé la tâche « ${existing.title} ».` } });
       }
@@ -60,6 +71,15 @@ export async function PATCH(request: Request) {
     if (auth.ctx.orgRole !== 'ORGANIZATION_ADMIN' && existing.assigneeId !== auth.ctx.user.id) return NextResponse.json({ error: 'Tâche inaccessible.' }, { status: 403 });
     const status = input.status ?? existing.status;
     const task = await prisma.task.update({ where: { id: input.id }, data: { status, progress: status === 'TERMINE' ? 100 : input.progress ?? existing.progress, comments: input.comment ? { create: { content: input.comment, authorId: auth.ctx.user.id } } : undefined } });
+    recordActivity({
+      organizationId: auth.ctx.organizationId, actorId: auth.ctx.user.id,
+      action: status === 'TERMINE' ? 'TASK_COMPLETED' : 'TASK_UPDATED',
+      entityType: 'Task', entityId: task.id,
+      summary: status === 'TERMINE'
+        ? `a terminé la tâche « ${existing.title} »`
+        : `a mis à jour la tâche « ${existing.title} » (${status})`,
+      projectName: existing.project,
+    });
     if (existing.assigneeId && existing.assigneeId !== auth.ctx.user.id) await prisma.notification.create({ data: { userId: existing.assigneeId, organizationId: auth.ctx.organizationId, title: 'Tâche modifiée', content: `La tâche « ${existing.title} » a été mise à jour.` } });
     return NextResponse.json({ task });
   } catch { return NextResponse.json({ error: 'Mise à jour invalide.' }, { status: 400 }); }
