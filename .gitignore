@@ -19,6 +19,7 @@ run-build.cmd
 .step*
 .term-check*
 .audit.json
+.commitmsg.txt
 coverage/
 .vitest/
 
