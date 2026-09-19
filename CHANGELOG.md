@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.6] - 2026-09-19
+
+### Added
+- **Tests unitaires Vitest** (`tests/`) : grille tarifaire et paliers (`plans`), génération/validation des clés signées (`license-keys`), rate limiting (`rate-limit`) — **17 tests, tous passants**. `npm test` lance Vitest.
+- **Pipeline CI** (`.github/workflows/ci.yml`) : `npm ci` → `prisma generate` → `tsc --noEmit` → tests Vitest → build Next.js, sur chaque push/PR `main`.
+- **Rappels automatiques de réunion** : script `scripts/meeting-reminders.ts` (notification in-app aux participants, dédupliquée par réunion) + workflow horaire `.github/workflows/meeting-reminders.yml`.
+
 ## [v7.5] - 2026-09-19
 
 ### Security

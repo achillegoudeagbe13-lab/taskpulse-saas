@@ -1,0 +1,6 @@
+feat(qualite): tests Vitest + pipeline CI + rappels automatiques de reunion
+
+- tests unitaires (tests/) : plans, license-keys, rate-limit — 17 tests OK
+- vitest configure (npm test), vitest.config.ts
+- CI (github/workflows/ci.yml) : npm ci, prisma generate, tsc, vitest, next build
+- rappels de reunion horaires (scripts/meeting-reminders.ts + workflow dedie)

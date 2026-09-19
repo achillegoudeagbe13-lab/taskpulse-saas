@@ -14,7 +14,9 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
@@ -34,7 +36,8 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/nodemailer": "^8.0.1",
     "prisma": "^6.16.2",
-    "tsx": "^4.23.12"
+    "tsx": "^4.23.12",
+    "vitest": "^5.0.1"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

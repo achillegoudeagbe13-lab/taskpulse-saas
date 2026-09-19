@@ -1,0 +1,28 @@
+name: CI — build & tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Vérification des types (tsc)
+        run: npx tsc --noEmit
+      - name: Tests unitaires (Vitest)
+        run: npx vitest run
+      - name: Build Next.js
+        run: npx next build
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder

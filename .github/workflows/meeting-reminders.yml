@@ -1,0 +1,23 @@
+name: Rappels de réunion
+
+on:
+  schedule:
+    - cron: '0 * * * *' # toutes les heures
+  workflow_dispatch:
+
+jobs:
+  reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Notifications des réunions imminentes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REMIND_WINDOW_MINUTES: '70'
+        run: npx tsx scripts/meeting-reminders.ts
