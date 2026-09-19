@@ -4,10 +4,14 @@ import { z } from 'zod';
 import { createSession, publicUser, syncPlatformRole } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { writeAudit } from '../../../../lib/audit';
+import { RATE_LIMITS, checkRateLimit, clientIp } from '../../../../lib/rate-limit';
 
 const loginSchema = z.object({ identifier: z.string().trim().min(1), password: z.string().min(1) });
 
 export async function POST(request: Request) {
+  // Anti brute-force : 10 tentatives / 5 min par IP (identifiants corrects ou non).
+  const limited = checkRateLimit(RATE_LIMITS.login, clientIp(request), request);
+  if (limited) return limited;
   try {
     const input = loginSchema.parse(await request.json());
     const identifier = input.identifier.toLowerCase();

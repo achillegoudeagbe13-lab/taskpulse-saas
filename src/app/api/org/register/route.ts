@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createSession, publicUser } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { writeAudit } from '../../../../lib/audit';
+import { RATE_LIMITS, checkRateLimit, clientIp } from '../../../../lib/rate-limit';
 
 /**
  * Création d'une organisation + du compte responsable.
@@ -33,6 +34,9 @@ function slugify(value: string) {
 }
 
 export async function POST(request: Request) {
+  // Anti spam de créations d'organisations : 5 / heure par IP.
+  const limited = checkRateLimit(RATE_LIMITS.register, clientIp(request), request);
+  if (limited) return limited;
   try {
     const input = schema.parse(await request.json());
 

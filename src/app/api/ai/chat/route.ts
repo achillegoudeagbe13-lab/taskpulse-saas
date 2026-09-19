@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireOrgMember } from '../../../../lib/auth';
+import { RATE_LIMITS, checkRateLimit } from '../../../../lib/rate-limit';
 
 const chatSchema = z.object({
   message: z.string().trim().min(1).max(2000),
@@ -186,6 +187,9 @@ function offlineAnswer(question: string): string {
 export async function POST(request: Request) {
   const auth = await requireOrgMember();
   if (auth.error) return auth.error;
+  // Coût API : 20 messages / minute par utilisateur.
+  const limited = checkRateLimit(RATE_LIMITS.ai, auth.ctx.user.id, request);
+  if (limited) return limited;
   try {
     const input = chatSchema.parse(await request.json());
 

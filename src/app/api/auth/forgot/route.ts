@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'crypto';
 import { z } from 'zod';
 import { prisma } from '../../../../lib/prisma';
 import { writeAudit } from '../../../../lib/audit';
+import { RATE_LIMITS, checkRateLimit, clientIp } from '../../../../lib/rate-limit';
 
 const RESET_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
 
@@ -25,6 +26,9 @@ function escapeHtml(value: string) {
 const schema = z.object({ email: z.string().trim().toLowerCase().email() });
 
 export async function POST(request: Request) {
+  // Anti spam d'e-mails : 5 demandes / 15 min par IP.
+  const limited = checkRateLimit(RATE_LIMITS.forgot, clientIp(request), request);
+  if (limited) return limited;
   try {
     const input = schema.parse(await request.json());
     const user = await prisma.user.findUnique({ where: { email: input.email } });

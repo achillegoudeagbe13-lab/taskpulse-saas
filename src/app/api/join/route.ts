@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createSession, publicUser } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { writeAudit } from '../../../lib/audit';
+import { RATE_LIMITS, checkRateLimit, clientIp } from '../../../lib/rate-limit';
 
 const usernameRegex = /^[a-z0-9._-]{3,30}$/;
 
@@ -30,6 +31,9 @@ export async function GET(request: Request) {
 
 /** Acceptation d'une invitation : création du compte rattaché à l'organisation de l'admin. */
 export async function POST(request: Request) {
+  // Anti abus de création de comptes : 10 acceptations / heure par IP.
+  const limited = checkRateLimit(RATE_LIMITS.join, clientIp(request), request);
+  if (limited) return limited;
   try {
     const input = z.object({
       token: z.string().min(10),

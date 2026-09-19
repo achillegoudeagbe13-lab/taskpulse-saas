@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireOrgMember } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { recordActivity } from '../../../lib/activity';
+import { enforcePlanActive } from '../../../lib/plan-guard';
 
 const entrySchema = z
   .object({
@@ -83,6 +84,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const auth = await requireOrgMember();
   if (auth.error) return auth.error;
+  const planLock = await enforcePlanActive(auth.ctx);
+  if (planLock) return planLock;
   try {
     const input = entrySchema.parse(await request.json());
 

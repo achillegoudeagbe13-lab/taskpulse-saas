@@ -5,6 +5,7 @@ import { requireOrgAdmin } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { writeAudit } from '../../../lib/audit';
 import { checkInviteSeatCapacity, subscriptionExpired } from '../../../lib/billing';
+import { enforcePlanActive } from '../../../lib/plan-guard';
 
 const INVITE_DAYS = 7;
 
@@ -26,9 +27,11 @@ export async function POST(request: Request) {
   const auth = await requireOrgAdmin();
   if (auth.error) return auth.error;
 
+  // --- Monétisation : verrouillage automatique si la période payée est dépassée ---
+  const lock = await enforcePlanActive(auth.ctx);
+  if (lock) return lock;
+
   // --- Monétisation : blocage en cas d'abonnement verrouillé ou expiré ---
-  // On combine planStatus ET l'expiration réelle (planExpiresAt), sinon une
-  // organisation dont l'abonnement a expiré peut continuer à inviter.
   if (
     auth.ctx.organization.planStatus !== 'ACTIVE' ||
     subscriptionExpired(auth.ctx.organization)

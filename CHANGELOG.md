@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.5] - 2026-09-19
+
+### Security
+- **Rate limiting applicatif** (`src/lib/rate-limit.ts`) : connexion 10/5 min par IP, mot de passe oublié 5/15 min, réinitialisation 10/15 min, inscription d'organisation 5/h, acceptation d'invitation 10/h, assistant IA 20 msg/min par utilisateur — réponses `429` avec `Retry-After`.
+- **Verrouillage automatique des abonnements expirés** (`src/lib/plan-guard.ts`) : la période payée dépassée persiste désormais `planStatus=EXPIRED` en base et refuse les écritures (HTTP 402) même sans passage du cron de facturation ; appliqué aux invitations, tâches et pointages.
+
 ## [v7.4] - 2026-09-19
 
 ### Added
