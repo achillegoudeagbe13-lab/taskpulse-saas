@@ -1,0 +1,29 @@
+name: Sauvegarde base de données
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # quotidien à 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Export JSON de la base (scripts/backup.mjs)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/backup.mjs
+      - name: Stockage de l'archive (artefact 90 jours)
+        uses: actions/upload-artifact@v4
+        with:
+          name: taskpulse-backup
+          path: backups/
+          retention-days: 90
+          if-no-files-found: warn

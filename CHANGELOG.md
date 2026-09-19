@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.7] - 2026-09-19
+
+### Added
+- **Exports CSV administrateur** (`GET /api/admin/export?type=attendance|leaves|billing[&from&to]`) : pointages (avec durées calculées), congés et facturation (palier, statut, licence, historique) — CSV « ; » + BOM UTF-8, prêt pour Excel, réservé aux administrateurs.
+- **Sauvegardes planifiées** (`.github/workflows/backup.yml`) : export JSON quotidien de la base (03:00 UTC) via `scripts/backup.mjs`, archivé en artefact GitHub avec rétention 90 jours.
+
 ## [v7.6] - 2026-09-19
 
 ### Added
