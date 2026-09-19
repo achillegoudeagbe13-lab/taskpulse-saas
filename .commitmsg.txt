@@ -1,8 +1,0 @@
-feat(securite): rate limiting + verrouillage auto des abonnements expires
-
-- rate limiting applicatif (src/lib/rate-limit.ts) : login 10/5min par IP,
-  forgot 5/15min, reset 10/15min, inscription 5/h, join 10/h, IA 20/min par
-  utilisateur — reponses 429 avec Retry-After
-- plan-guard (src/lib/plan-guard.ts) : la periode payee depassee persiste
-  planStatus=EXPIRE en base et refuse les ecritures (402) sur invitations,
-  taches et pointages, meme sans cron de facturation
