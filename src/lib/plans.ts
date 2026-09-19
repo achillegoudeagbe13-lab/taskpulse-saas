@@ -1,7 +1,38 @@
 import type { PlanTier } from '@prisma/client';
 
 /**
- * Grille tarifaire par paliers (volume de membres) — monétisation Mar-ci Flow.
+ * Génération de clés d'activation « signées » par palier : le préfixe
+ * identifie visuellement le montant cible (ex : MCF-5K-AB12-CD34 pour 5 000 F).
+ * Fichier sûr côté client (aucune dépendance serveur).
+ */
+export const TIER_PREFIX: Record<PlanTier, string> = {
+  T1: '5K',
+  T2: '10K',
+  T3: '15K',
+  T4: '20K',
+};
+
+export const KEY_PREFIXES = Object.values(TIER_PREFIX) as string[];
+
+/** Format attendu : MCF-<PREFIX>-XXXX-XXXX (XX = A-Z sans I/O + 2-9). */
+export const KEY_PATTERN = /^MCF-(5K|10K|15K|20K)-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/;
+
+export function tierByPrefix(prefix: string): PlanTier | null {
+  const entry = (Object.entries(TIER_PREFIX) as [PlanTier, string][]).find(([, p]) => p === prefix);
+  return entry?.[0] ?? null;
+}
+
+/** Vérification de forme d'une clé (validation « intelligente » côté client et serveur). */
+export function isValidKeyShape(code: string): boolean {
+  return KEY_PATTERN.test(code.trim().toUpperCase());
+}
+
+/** Préfixe attendu pour un palier donné (ex : '10K'). */
+export function prefixOfTier(tier: PlanTier): string {
+  return TIER_PREFIX[tier];
+}
+
+/**
  * Fichier « sûr » côté client : aucune dépendance Prisma / serveur.
  * Les montants sont exprimés en F (francs) par abonnement.
  */

@@ -1,18 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { randomBytes } from 'crypto';
 import { requirePlatformSuperAdmin } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { writeAudit } from '../../../../lib/audit';
 import { TIERS, tierInfo } from '../../../../lib/billing';
-
-/** Génère un code de licence lisible & sûr : MCF-XXXX-XXXX-XXXX. */
-function generateCode() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const block = () => Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
-  const nonce = randomBytes(3).readUIntBE(0, 3);
-  return `MCF-${nonce.toString(36).toUpperCase().padStart(4, '0')}-${block()}-${block()}`;
-}
+import { generateLicenseKey } from '../../../../lib/license-keys';
 
 /** GET /api/platform/licenses — liste (super admin). */
 export async function GET() {
@@ -42,7 +34,7 @@ export async function GET() {
   });
 }
 
-/** POST /api/platform/licenses — génère un code pour un palier (super admin). */
+/** POST /api/platform/licenses — génère une clé signée par palier (super admin). */
 const genSchema = z.object({
   tier: z.enum(['T1', 'T2', 'T3', 'T4']),
   note: z.string().trim().max(200).optional(),
@@ -56,10 +48,10 @@ export async function POST(request: Request) {
   try {
     const input = genSchema.parse(await request.json());
     const tierInfoLocal = tierInfo(input.tier);
-    let code = generateCode();
-    // Unicité du code côté serveur.
+    // Clé unique dont le préfixe identifie le palier (ex : MCF-10K-AB12-CD34).
+    let code = generateLicenseKey(input.tier);
     while (await prisma.licenseCode.findUnique({ where: { code } })) {
-      code = generateCode();
+      code = generateLicenseKey(input.tier);
     }
 
     const license = await prisma.licenseCode.create({
@@ -72,7 +64,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await writeAudit(auth.ctx.user.id, 'GENERATION_LICENCE', 'LicenseCode', license.id, { tier: input.tier });
+    await writeAudit(auth.ctx.user.id, 'GENERATION_LICENCE', 'LicenseCode', license.id, { tier: input.tier, code });
 
     return NextResponse.json({ ok: true, license }, { status: 201 });
   } catch (error) {

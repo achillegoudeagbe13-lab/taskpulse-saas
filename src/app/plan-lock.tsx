@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, Key, RefreshCw, ShieldCheck } from './ui-icons';
+import { Building2, Key, RefreshCw, ShieldCheck, Sparkles } from './ui-icons';
 import { TIERS, formatPrice, formatExpiry } from '../lib/plans';
+import PlanRequestsPanel from './plan-requests-panel';
 
 export type OrgPlan = {
   tier: string | null;
@@ -27,10 +28,11 @@ export type OrgPlan = {
  * l'organisation est expiré ou que le palier est dépassé. L'administrateur
  * peut saisir un code d'activation pour débloquer (ou mettre à niveau).
  */
-export default function PlanLock({ plan, orgName, onActivated }: { plan: OrgPlan; orgName: string; onActivated: () => void }) {
+export default function PlanLock({ plan, orgName, onActivated, canRequest = false }: { plan: OrgPlan; orgName: string; onActivated: () => void; canRequest?: boolean }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showRequest, setShowRequest] = useState(false);
 
   async function activate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -68,7 +70,8 @@ export default function PlanLock({ plan, orgName, onActivated }: { plan: OrgPlan
 
       <p className="muted" style={{ fontSize: 12.5 }}>
         <Building2 size={13} style={{ verticalAlign: 'middle' }} /> Pour débloquer l’espace (ou passer au palier supérieur), saisissez le
-        <strong> code d’activation</strong> reçu après paiement. Contactez l’administrateur de la plateforme pour l’obtenir.
+        <strong> code d’activation</strong> reçu après paiement, ou envoyez une <strong>demande d’activation</strong> à
+        l’administrateur de la plateforme pour payer et recevoir votre clé.
       </p>
 
       <form onSubmit={activate} style={{ width: '100%', maxWidth: 400, display: 'grid', gap: 10 }}>
@@ -103,6 +106,15 @@ export default function PlanLock({ plan, orgName, onActivated }: { plan: OrgPlan
       <button type="button" className="outline-button" onClick={onActivated} style={{ marginTop: 6 }}>
         <RefreshCw size={15} /> Re-vérifier la licence
       </button>
+
+      {canRequest && (
+        <div style={{ width: '100%', maxWidth: 820, marginTop: 4 }}>
+          <button type="button" className="outline-button" onClick={() => setShowRequest((value) => !value)}>
+            <Sparkles size={15} /> {showRequest ? 'Masquer la demande d’activation' : 'Demander une activation / un palier supérieur'}
+          </button>
+          {showRequest && <PlanRequestsPanel />}
+        </div>
+      )}
     </div>
   );
 }

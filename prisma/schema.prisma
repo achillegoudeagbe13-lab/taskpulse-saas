@@ -160,6 +160,7 @@ model Organization {
   activityEvents ActivityEvent[]
   meetingNotes   MeetingNote[]
   projectDocuments ProjectDocument[]
+  planRequests   PlanRequest[]
 }
 
 model Membership {
@@ -246,6 +247,7 @@ model User {
   meetingNotesAuthored MeetingNote[]   @relation("MeetingNoteAuthor")
   meetingNotesEdited   MeetingNote[]   @relation("MeetingNoteEditor")
   uploadedDocuments    ProjectDocument[]
+  supportMessages      SupportMessage[]
 }
 
 model WorkJournal {
@@ -732,3 +734,52 @@ model ProjectDocument {
   @@index([organizationId, projectName])
   @@index([taskId])
 }
+
+/// Parcours client d'abonnement : demande d'activation envoyée par
+/// l'administrateur d'une organisation au super-admin plateforme depuis la
+/// grille tarifaire. Conversation de suivi via SupportMessage.
+enum PlanRequestStatus {
+  PENDING
+  PROCESSING
+  APPROVED
+  REJECTED
+}
+
+model PlanRequest {
+  id             String           @id @default(cuid())
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  requestedTier  PlanTier
+  /// Informations saisies dans le formulaire de demande.
+  contactName    String
+  contactEmail   String
+  contactPhone   String?
+  paymentMethod  String // ex: MOBILE_MONEY, VIREMENT, ESPECES
+  needs          String? // Besoins / message libre
+  status         PlanRequestStatus @default(PENDING)
+  decidedAt      DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  messages       SupportMessage[]
+
+  @@index([organizationId, status])
+  @@index([status, createdAt])
+}
+
+/// Message de la conversation support / licence entre l'admin d'une
+/// organisation et le super-admin plateforme (y compris remise de clé).
+model SupportMessage {
+  id         String      @id @default(cuid())
+  request    PlanRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  requestId  String
+  author     User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId   String
+  isSuperAdmin Boolean   @default(false)
+  body       String
+  /// Clé d'activation éventuellement jointe au message (remise par le super-admin).
+  licenseKey String?
+  createdAt  DateTime    @default(now())
+
+  @@index([requestId, createdAt])
+}
+

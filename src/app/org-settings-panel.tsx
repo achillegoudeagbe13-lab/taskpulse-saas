@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Building2, Key, RefreshCw, Sparkles, Trash2 } from './ui-icons';
 import { TIERS, formatPrice, formatExpiry } from '../lib/plans';
 import type { OrgPlan } from './plan-lock';
+import PlanRequestsPanel from './plan-requests-panel';
 
 export default function OrgSettingsPanel({ organizationName }: { organizationName: string | null }) {
   const [settings, setSettings] = useState<{ organizationName?: string; logoUrl?: string }>({});
@@ -233,6 +234,8 @@ export default function OrgSettingsPanel({ organizationName }: { organizationNam
           <p className="muted">Abonnement indisponible pour le moment.</p>
         )}
       </section>
+
+      <PlanRequestsPanel />
 
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="panel-heading"><h3>Nom de l’organisation</h3></div>

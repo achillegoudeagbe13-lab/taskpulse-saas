@@ -5,6 +5,7 @@ import { Building2, RefreshCw, ShieldCheck, Users } from './ui-icons';
 import { safeStr, safeDateLabel, asArray } from '../lib/render-safe';
 import { tierInfo } from '../lib/plans';
 import PlatformLicenses from './platform-licenses';
+import PlatformPlanRequests from './platform-plan-requests';
 
 type OrgRow = {
   id: string;
@@ -132,6 +133,7 @@ export default function PlatformOverview() {
             )}
           </section>
 
+          <PlatformPlanRequests />
           <PlatformLicenses />
         </>
       ) : null}

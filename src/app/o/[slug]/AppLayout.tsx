@@ -167,7 +167,7 @@ export default function AppLayout({
     return (
       <div className="app-shell" data-org-locked="true">
         <div style={{ padding: '4vh 20px 40px' }}>
-          <PlanLock plan={plan} orgName={ctx.organization?.name ?? ''} onActivated={() => { setPlan(null); loadPlan(); }} />
+          <PlanLock plan={plan} orgName={ctx.organization?.name ?? ''} canRequest={orgRole === 'ORGANIZATION_ADMIN'} onActivated={() => { setPlan(null); loadPlan(); }} />
         </div>
       </div>
     );

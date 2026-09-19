@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.4] - 2026-09-19
+
+### Added
+- **Parcours client d'abonnement (demande → paiement → clé d'activation) :**
+  - Modèles Prisma **`PlanRequest`** (palier demandé, coordonnées de contact, moyen de paiement,
+    besoin exprimé, statut `PENDING/PROCESSING/APPROVED/REJECTED`, décision horodatée) et
+    **`SupportMessage`** (conversation de suivi, message plateforme ou organisation, clé
+    d'activation éventuellement jointe).
+  - **Clés d'activation « signées » par palier** : helpers `src/lib/plans.ts`
+    (`TIER_PREFIX`, `KEY_PATTERN`, `tierByPrefix`) et générateur serveur
+    `src/lib/license-keys.ts` (`generateLicenseKey`, `isValidKeyShape`, `keyPrefix`).
+    Format **MCF-<PALIER>-XXXX-XXXX** (5K / 10K / 15K / 20K) — le préfixe identifie le montant
+    cible et est vérifié à la remise comme à l'activation. `POST /api/platform/licenses`
+    utilise désormais ce générateur (audit enrichi de la clé émise).
+  - **Côté organisation** (admin) :
+    - `GET /api/org/plan-requests` — demandes de l'organisation + conversation + coordonnées
+      pré-remplies de l'admin connecté.
+    - `POST /api/org/plan-requests` — envoie une demande (une seule demande ouverte à la fois,
+      HTTP 409 sinon), e-mail d'alerte au super-admin plateforme si SMTP configuré.
+    - `POST /api/org/plan-requests/[id]/messages` — réponse de l'admin dans la conversation
+      (une réponse à un dossier refusé le remet en traitement).
+    - Panneau **« Demande d'activation »** (`src/app/plan-requests-panel.tsx`) : grille tarifaire
+      cliquable, formulaire coordonnées + moyen de paiement, conversation **avec boutons
+      « Copier » / « Activer maintenant »** sur la clé reçue, historique des demandes,
+      rafraîchissement automatique toutes les 30 s.
+  - **Côté plateforme** (super-admin) :
+    - `GET /api/platform/plan-requests` — file d'attente de toutes les organisations (filtre
+      `?status=`), compteur de dossiers ouverts.
+    - `PATCH /api/platform/plan-requests/[id]` — décision (en traitement / approuvée / refusée).
+    - `POST /api/platform/plan-requests/[id]/messages` — réponse du super-admin, avec
+      **remise d'une clé existante** (vérification de forme, de disponibilité et de cohérence
+      de palier ; le dossier passe alors automatiquement en « Approuvée » et l'admin de
+      l'organisation est prévenu par e-mail).
+    - `POST /api/platform/plan-requests/[id]/deliver` — **génération + livraison en une action** :
+      clé unique `MCF-<PALIER>-XXXX-XXXX`, message de livraison dans la conversation, dossier
+      approuvé, e-mail à l'organisation.
+    - Console **« Demandes d'abonnement »** (`src/app/platform-plan-requests.tsx`) : file filtrable,
+      dossier détaillé, conversation, sélecteur de clés disponibles, décision en un clic.
+  - Intégration : panneau des demandes dans **Paramètres → Plan & licence** (admin), section
+    dépliable sur l'**écran de verrouillage** (`plan-lock.tsx`, visible seulement pour
+    l'administrateur de l'organisation), et console plateforme dans `/platform`.
+
+### Notes
+- **Base : `npx prisma db push` appliqué** (tables `PlanRequest`, `SupportMessage` + énumération
+  `PlanRequestStatus`) — opération purement additive, aucune donnée impactée.
+- Styles dédiés (conversation, badges de statut, sélection de palier, thème sombre) dans
+  `src/app/landing.css`.
+
+### Validation
+- `npx prisma validate` : OK · `prisma generate` : OK · `prisma db push` : OK.
+- Type-check `tsc --noEmit` et `npm run build` exécutés sur le périmètre modifié.
+
 ## [v7.3] - 2026-09-15
 
 ### Added

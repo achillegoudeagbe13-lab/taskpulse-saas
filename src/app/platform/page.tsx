@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, BarChart3, Users, Building2, LogOut, Search, Settings, Ban, PlayCircle, Trash2, X } from '../ui-icons';
+import PlatformLicenses from '../platform-licenses';
+import PlatformPlanRequests from '../platform-plan-requests';
 
 type Organization = {
   id: string; name: string; slug: string;
@@ -249,6 +251,9 @@ export default function PlatformPage() {
           </p>
         </div>
       )}
+
+      <PlatformPlanRequests />
+      <PlatformLicenses />
     </div>
   );
 }
