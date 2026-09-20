@@ -1,4 +1,5 @@
 const path = require('path');
+const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -15,4 +16,10 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig;
+// Sentry : wrapper inerte sans DSN — la build reste identique tant que
+// SENTRY_DSN / NEXT_PUBLIC_SENTRY_DSN ne sont pas configurés.
+module.exports = withSentryConfig(nextConfig, {
+  // Sans auth token (SENTRY_AUTH_TOKEN), pas d'upload de sourcemaps : build locale/CI ok.
+  silent: true,
+  disableLogger: true,
+});

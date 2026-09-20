@@ -27,6 +27,7 @@ import MeetingNotesPanel from '../../meeting-notes-panel';
 import DocumentsPanel from '../../documents-panel';
 import AIAssistant from '../../ai-assistant';
 import PlanLock, { type OrgPlan } from '../../plan-lock';
+import PushNotifications from '../../push-notifications';
 import { Moon, Sun, PlayCircle, FileText, Link2 } from '../../ui-icons';
 
 
@@ -235,6 +236,8 @@ export default function AppLayout({
           </div>
           <div className="topbar-spacer" />
           <NotificationBell onOpenAll={() => goTo('Notifications')} />
+          {/* 🔔 Web Push navigateur (visible uniquement si supporté + configuré) */}
+          <PushNotifications />
           {user.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={user.photoUrl} alt="" className="avatar top-avatar" title={user.email} />

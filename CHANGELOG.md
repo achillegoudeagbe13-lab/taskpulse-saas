@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.9] - 2026-09-20
+
+### Added
+- **Notifications Web Push réunions (cloche discrète dans la barre d'app)** :
+  abonnement du navigateur (`public/sw.js` + `push-notifications.tsx`,
+  **aucun popup automatique** : la cloche 🔔 apparaît seulement si le push est
+  supporté + configuré ; 1er clic = permission + abonnement, clic suivant =
+  désinscription), `GET/POST/DELETE /api/push` (clé publique VAPID, enregistrement /
+  désinscription), `src/lib/push.ts` (envoi + nettoyage des abonnements expirés
+  404/410). Dégradation douce sans `WEB_PUSH_*` (repli `VAPID_*` accepté). Push
+  déclenché à la **création d'une réunion** (`POST /api/org/meetings`) et par les
+  **rappels automatiques** (`scripts/meeting-reminders.ts`). Variables documentées
+  dans `.env.example` (`WEB_PUSH_PUBLIC_KEY/PRIVATE_KEY/SUBJECT`).
+- **Surveillance d'erreurs Sentry (optionnelle, inerte sans DSN)** : `@sentry/nextjs`,
+  `sentry.{client,server,edge}.config.ts` + `src/instrumentation.ts` + wrapper dans
+  `next.config.js`. Sans `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, la build et le
+  runtime restent identiques (aucun rapport envoyé, pas d'upload de sourcemaps).
+  Variables documentées dans `.env.example`, désactivable à tout moment en
+  supprimant les DSN.
+
+### Changed
+- **TypeScript rétrogradé `6.0.3` → `5.9.3`** (ligne supportée : la v6 n'existe pas,
+  elle cassait `npm ci` / la CI).
+
+### Fixed
+- **Sauvegarde complète v7.x** (`scripts/backup.mjs`) : ajout des tables manquantes
+  `pushSubscriptions` (Web Push) en plus de `timeEntries`, `activityEvents`,
+  `meetingNotes`, `projectDocuments`, `planRequests` + `supportMessages`.
+
+## [v7.8] - 2026-09-20
+
+### Fixed
+- **Sauvegarde complète v7.x** (`scripts/backup.mjs`) : ajout des tables manquantes
+  `timeEntries` (suivi du temps), `activityEvents` (fil d'activité), `meetingNotes`
+  (comptes-rendus), `projectDocuments` (livrables), `planRequests` + `supportMessages`
+  (parcours d'abonnement) — sans elles, toute restauration depuis `backups/*.json`
+  perdait les modules v7.3/v7.4. Compteurs `counts` enrichis en conséquence.
+- **Dossier de sauvegarde configurable** : `BACKUP_DIR` (défaut `./backups`),
+  déjà documenté dans `.env.example` mais ignoré par le script jusqu'ici.
+
 ## [v7.7] - 2026-09-19
 
 ### Added

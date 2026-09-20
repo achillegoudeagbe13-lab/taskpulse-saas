@@ -248,6 +248,21 @@ model User {
   meetingNotesEdited   MeetingNote[]   @relation("MeetingNoteEditor")
   uploadedDocuments    ProjectDocument[]
   supportMessages      SupportMessage[]
+  pushSubscriptions    PushSubscription[]
+}
+
+/// Abonnement Web Push d'un navigateur (une ligne par appareil).
+model PushSubscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model WorkJournal {

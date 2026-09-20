@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireOrgAdmin } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 import { jitsiRoomUrl } from '../../../../lib/jitsi';
+import { sendPushToUser } from '../../../../lib/push';
 
 const meetingSchema = z.object({
   title: z.string().trim().min(1).max(160),
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
       select: { id: true, title: true, startAt: true, endAt: true, roomId: true, meetingLink: true },
     });
 
-    // Notifications (fire-and-forget).
+    // Notifications in-app + Web Push (fire-and-forget).
     for (const uid of memberIds) {
       prisma.notification.create({
         data: {
@@ -82,6 +83,11 @@ export async function POST(request: Request) {
           title: 'Réunion programmée', content: `${input.title} (${start.toLocaleString('fr-FR')} – ${end.toLocaleString('fr-FR')}).`,
         },
       }).catch(() => {});
+      sendPushToUser(
+        uid,
+        '📅 Réunion programmée',
+        `${input.title} — ${start.toLocaleString('fr-FR')}.`,
+      ).catch(() => {});
     }
     return NextResponse.json({ meeting, ok: true }, { status: 201 });
   } catch (e) {

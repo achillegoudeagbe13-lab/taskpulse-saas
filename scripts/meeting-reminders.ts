@@ -14,10 +14,46 @@
  * clair et le workflow GitHub continue (voir maintenance.yml).
  */
 import { PrismaClient } from '@prisma/client';
+import webpush from 'web-push';
 
 const prisma = new PrismaClient();
 const WINDOW_MIN = Number(process.env.REMIND_WINDOW_MINUTES || 60);
 const MARKER_PREFIX = 'meetingReminder:';
+
+/** Web Push optionnel : envoi silencieusement ignoré sans clés (WEB_PUSH_* ou VAPID_*). */
+function pickEnv(...names: string[]): string | null {
+  for (const name of names) {
+    const value = process.env[name]?.trim();
+    if (value) return value;
+  }
+  return null;
+}
+function pushConfigured(): boolean {
+  const publicKey = pickEnv('WEB_PUSH_PUBLIC_KEY', 'VAPID_PUBLIC_KEY');
+  const privateKey = pickEnv('WEB_PUSH_PRIVATE_KEY', 'VAPID_PRIVATE_KEY');
+  if (!publicKey || !privateKey) return false;
+  const subject = pickEnv('WEB_PUSH_SUBJECT', 'VAPID_SUBJECT') ?? 'mailto:contact@mar-ci-flow.app';
+  webpush.setVapidDetails(subject, publicKey, privateKey);
+  return true;
+}
+
+async function sendPush(userIds: string[], title: string, body: string): Promise<void> {
+  if (!pushConfigured()) return;
+  const subs = await prisma.pushSubscription.findMany({ where: { userId: { in: userIds } } });
+  const payload = JSON.stringify({ title, body, url: '/' });
+  await Promise.allSettled(
+    subs.map(async (sub) => {
+      try {
+        await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+      } catch (error) {
+        const status = (error as { statusCode?: number }).statusCode;
+        if (status === 404 || status === 410) {
+          await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => undefined);
+        }
+      }
+    }),
+  );
+}
 
 async function main(): Promise<void> {
   const now = new Date();
@@ -59,6 +95,8 @@ async function main(): Promise<void> {
         })),
       });
       notified += userIds.length;
+      const when = meeting.startAt.toLocaleString('fr-FR', { timeZone: 'UTC' });
+      await sendPush(userIds, '⏰ Réunion imminente', `${meeting.title} — ${when} (UTC).`);
     }
 
     await prisma.systemSetting.create({
