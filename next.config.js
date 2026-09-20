@@ -10,6 +10,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Requis par Next.js 14 pour charger src/instrumentation.ts (Sentry serveur/edge).
+  experimental: {
+    instrumentationHook: true,
+  },
   webpack: (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src');
     return config;

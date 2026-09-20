@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   supprimant les DSN.
 
 ### Changed
-- **TypeScript rétrogradé `6.0.3` → `5.9.3`** (ligne supportée : la v6 n'existe pas,
+- **TypeScript rétrogradé `6.0.3` → `5.9.2`** (ligne supportée : la v6 n'existe pas,
   elle cassait `npm ci` / la CI).
 
 ### Fixed

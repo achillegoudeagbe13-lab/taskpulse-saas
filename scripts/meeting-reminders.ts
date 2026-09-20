@@ -77,6 +77,8 @@ async function main(): Promise<void> {
 
   let notified = 0;
   for (const meeting of meetings) {
+    // Les réunions sans organisation (données historiques) ne portent pas de rappel.
+    if (!meeting.organizationId) continue;
     const markerKey = `${MARKER_PREFIX}${meeting.id}`;
     // Déduplication : un seul rappel par réunion.
     const marker = await prisma.systemSetting.findUnique({
@@ -84,7 +86,7 @@ async function main(): Promise<void> {
     });
     if (marker) continue;
 
-    const userIds = [...new Set(meeting.attendees.map((a) => a.userId))];
+    const userIds = [...new Set(meeting.attendees.map((a) => a.userId).filter((id): id is string => id !== null))];
     if (userIds.length > 0) {
       await prisma.notification.createMany({
         data: userIds.map((userId) => ({
