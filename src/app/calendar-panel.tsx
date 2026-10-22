@@ -79,25 +79,27 @@ function statusLabel(status: string): string {
 function toDateInput(d: Date): string { return `${d.getFullYear()}-${`${d.getMonth() + 1}`.padStart(2, '0')}-${`${d.getDate()}`.padStart(2, '0')}`; }
 
 /** Normalise un évènement venu de l'API : garantit des chaînes et des dates exploitables. */
-function normalizeEvent(raw: any): CalEvent | null {
+function normalizeEvent(raw: unknown): CalEvent | null {
   if (!raw || typeof raw !== 'object') return null;
-  const type = safeStr(raw.type) as CalEvent['type'];
+  const obj = raw as Record<string, unknown>;
+  const type = safeStr(obj.type) as CalEvent['type'];
   if (!(['task', 'meeting', 'leave'] as CalEvent['type'][]).includes(type)) return null;
-  const start = safeDate(raw.startAt);
+  const start = safeDate(obj.startAt);
   if (!start) return null; // date de début absente/invalide → on ignore plutôt que de planter le rendu
-  const userName = raw.user && typeof raw.user === 'object' ? safeStr((raw.user as { name?: unknown }).name) : '';
-  const metaRaw = raw.meta && typeof raw.meta === 'object' ? raw.meta as Record<string, unknown> : {};
+  const userObj = obj.user && typeof obj.user === 'object' ? (obj.user as { name?: unknown }) : null;
+  const userName = userObj ? safeStr(userObj.name) : '';
+  const metaRaw = obj.meta && typeof obj.meta === 'object' ? (obj.meta as Record<string, unknown>) : {};
   const normalized: CalEvent = {
-    id: safeStr(raw.id),
+    id: safeStr(obj.id),
     type,
-    title: safeStr(raw.title, 'Événement'),
+    title: safeStr(obj.title, 'Événement'),
     startAt: start.toISOString(),
-    endAt: safeDate(raw.endAt)?.toISOString() ?? null,
-    color: safeStr(raw.color, '#3b82f6'),
-    allDay: raw.allDay === true,
+    endAt: safeDate(obj.endAt)?.toISOString() ?? null,
+    color: safeStr(obj.color, '#3b82f6'),
+    allDay: obj.allDay === true,
     status: safeStr(metaRaw.status),
-    description: typeof raw.description === 'string' && raw.description ? raw.description : null,
-    userId: typeof raw.userId === 'string' && raw.userId ? raw.userId : null,
+    description: typeof obj.description === 'string' && obj.description ? obj.description : null,
+    userId: typeof obj.userId === 'string' && obj.userId ? obj.userId : null,
     leaveId: typeof metaRaw.leaveId === 'string' && metaRaw.leaveId ? metaRaw.leaveId : null,
     leaveReason: typeof metaRaw.reason === 'string' && metaRaw.reason ? metaRaw.reason : null,
     user: userName ? { name: userName } : undefined,
@@ -105,7 +107,7 @@ function normalizeEvent(raw: any): CalEvent | null {
   return normalized;
 }
 
-export default function CalendarPanel({ user, orgRole }: { user: any; orgRole?: string | null }) {
+export default function CalendarPanel({ user, orgRole }: { user: { id: string; role?: string | null } | null; orgRole?: string | null }) {
   const [mode, setMode] = useState<Mode>('month');
   const [current, setCurrent] = useState(new Date());
   const [events, setEvents] = useState<CalEvent[]>([]);
@@ -258,7 +260,7 @@ export default function CalendarPanel({ user, orgRole }: { user: any; orgRole?: 
         <div className="calendar-filters">
           <button type="button" className="calendar-filters-close" onClick={() => setFilterOpen(false)} aria-label="Fermer les filtres" title="Fermer">×</button>
           <div className="filter-group"><span>Type d’événement</span>{(['task', 'meeting', 'leave'] as CalEvent['type'][]).map((t) => <label key={t}><input type="checkbox" checked={types[t] ?? true} onChange={(event) => setTypes({ ...types, [t]: event.target.checked })} /> {TYPE_LABELS[t]}</label>)}</div>
-          <div className="filter-group"><span>Membre</span><select value={memberId} onChange={(event) => setMemberId(event.target.value as any)}><option value="all">Toute l’équipe</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
+          <div className="filter-group"><span>Membre</span><select value={memberId} onChange={(event) => setMemberId(event.target.value === 'all' ? 'all' : event.target.value)}><option value="all">Toute l’équipe</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
         </div>
       )}
       {!loading && events.length === 0 && (

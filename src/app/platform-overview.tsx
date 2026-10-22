@@ -108,7 +108,7 @@ export default function PlatformOverview() {
                           <td><span className={`status-badge ${org.status === 'ACTIVE' ? 'active' : ''}`}>{org.status === 'ACTIVE' ? 'Active' : 'Suspendue'}</span></td>
                           <td>
                             <span className={`status-badge ${org.planStatus !== 'ACTIVE' ? 'bloque' : ''}`}>
-                              {tierInfo(org.planTier as any).label.split(' ').slice(-1)[0]}
+                              {tierInfo(org.planTier === 'T1' || org.planTier === 'T2' || org.planTier === 'T3' || org.planTier === 'T4' ? org.planTier : undefined).label.split(' ').slice(-1)[0]}
                               {org.planStatus !== 'ACTIVE' ? ' · ' + safeStr(org.planStatus) : ''}
                             </span>
                           </td>

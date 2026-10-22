@@ -11,10 +11,7 @@ function safeStr(value: unknown, fallback = ''): string {
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') return String(value);
   if (typeof value === 'object') {
-    try {
-      const asDate = new Date(value as any);
-      if (!isNaN(asDate.getTime())) return asDate.toISOString();
-    } catch { /* ignore */ }
+    if (value instanceof Date) return isNaN(value.getTime()) ? fallback : value.toISOString();
     try { return String(value); } catch { return fallback; }
   }
   return String(value);
@@ -23,7 +20,9 @@ function safeStr(value: unknown, fallback = ''): string {
 /** Date locale sûre pour l'affichage d'horodatage. */
 function safeDateTime(value: unknown): string {
   if (value === null || value === undefined) return '';
-  const d = new Date(value as any);
+  if (value instanceof Date) return isNaN(value.getTime()) ? '' : value.toLocaleString('fr-FR');
+  if (typeof value !== 'string' && typeof value !== 'number') return '';
+  const d = new Date(value);
   if (isNaN(d.getTime())) return '';
   try { return d.toLocaleString('fr-FR'); } catch { return ''; }
 }

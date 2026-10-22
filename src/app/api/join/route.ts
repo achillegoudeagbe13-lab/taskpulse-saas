@@ -81,7 +81,8 @@ export async function POST(request: Request) {
       where: { id: result.id },
       include: { department: true, profile: true, memberships: { include: { organization: true }, orderBy: { createdAt: 'asc' } } },
     });
-    return NextResponse.json({ organization: { id: invitation.organization.id, name: invitation.organization.name, slug: invitation.organization.slug }, user: publicUser(full!) }, { status: 201 });
+    if (!full) return NextResponse.json({ error: 'Compte créé, mais la session automatique a échoué. Veuillez vous connecter.' }, { status: 201 });
+    return NextResponse.json({ organization: { id: invitation.organization.id, name: invitation.organization.name, slug: invitation.organization.slug }, user: publicUser(full) }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues[0]?.message ?? 'Données invalides.' }, { status: 400 });
     return NextResponse.json({ error: 'Impossible de rejoindre cette organisation.' }, { status: 400 });

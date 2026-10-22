@@ -20,7 +20,8 @@ export async function POST(request: Request) {
       where: { id: auth.ctx.user.id },
       include: { department: true, profile: true, memberships: { include: { organization: true }, orderBy: { createdAt: 'asc' } } },
     });
-    return NextResponse.json({ user: publicUser(full!) });
+    if (!full) return NextResponse.json({ error: 'Organisation changée, mais le rechargement du profil a échoué.' }, { status: 200 });
+    return NextResponse.json({ user: publicUser(full) });
   } catch {
     return NextResponse.json({ error: 'Requête invalide.' }, { status: 400 });
   }

@@ -30,9 +30,9 @@ export async function GET(request: Request) {
   const events: CalendarEvent[] = [];
 
   // a) Tâches — deadlines (filtre la période directement en base).
-  const taskWhere: any = { organizationId: auth.ctx.organizationId };
+  const taskWhere: { organizationId: string; dueDate?: { gte?: Date; lt?: Date } } = { organizationId: auth.ctx.organizationId };
   if (startGte || endLt) {
-    const due: any = {};
+    const due: { gte?: Date; lt?: Date } = {};
     if (startGte) due.gte = startGte;
     if (endLt) due.lt = endLt;
     taskWhere.dueDate = due;
@@ -52,8 +52,8 @@ export async function GET(request: Request) {
   }
 
   // b) Réunions d'équipe (intersection temporelle correcte en base).
-  const meetingWhere: any = { organizationId: auth.ctx.organizationId };
-  const meetingOverlap: any[] = [];
+  const meetingWhere: { organizationId: string; AND?: Array<{ startAt?: { lt: Date }; endAt?: { gt: Date } }> } = { organizationId: auth.ctx.organizationId };
+  const meetingOverlap: Array<{ startAt?: { lt: Date }; endAt?: { gt: Date } }> = [];
   if (endLt) meetingOverlap.push({ startAt: { lt: endLt } });
   if (startGte) meetingOverlap.push({ endAt: { gt: startGte } });
   if (meetingOverlap.length > 0) meetingWhere.AND = meetingOverlap;
@@ -75,7 +75,7 @@ export async function GET(request: Request) {
   }
 
   // c) Congés / absences approuvées ou en attente — étalés sur toutes leurs journées (1 entrée par jour).
-  const leaveWhere: any = { organizationId: auth.ctx.organizationId, status: { in: ['APPROVED', 'PENDING'] } };
+  const leaveWhere: { organizationId: string; status: { in: Array<'APPROVED' | 'PENDING'> }; endDate?: { gte: Date }; startDate?: { lt: Date } } = { organizationId: auth.ctx.organizationId, status: { in: ['APPROVED', 'PENDING'] } };
   if (startGte) leaveWhere.endDate = { gte: startGte };
   if (endLt) leaveWhere.startDate = { lt: endLt };
   const leaves = await prisma.leaveRequest.findMany({

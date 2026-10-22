@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       invitation,
       // Lien de join à transmettre au futur membre si l'e-mail n'a pas pu être envoyé.
-      inviteUrl: emailed ? undefined : `/rejoindre?token=${invitation.token}`,
+      inviteUrl: emailed ? undefined : inviteUrl,
       emailed,
       expiresAt: invitation.expiresAt.toISOString(),
     }, { status: 201 });

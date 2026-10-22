@@ -79,7 +79,7 @@ export default function PlatformLicenses() {
 
       <form className="plan-gen" onSubmit={generate} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 18 }}>
         <label style={{ display: 'grid', gap: 6, fontSize: 11, fontWeight: 700 }}>PALIER
-          <select value={tier} onChange={(e) => setTier(e.target.value as any)}>
+          <select value={tier} onChange={(e) => { const v = e.target.value; if (v === 'T1' || v === 'T2' || v === 'T3' || v === 'T4') setTier(v); }}>
             {TIERS.map((t) => <option key={t.tier} value={t.tier}>{t.label} · {formatPrice(t.price)}</option>)}
           </select>
         </label>
@@ -107,7 +107,7 @@ export default function PlatformLicenses() {
                   <td><strong style={{ fontFamily: 'monospace', letterSpacing: '.06em' }}>{safeStr(c.code)}</strong>{' '}
                     <button className="link-button" onClick={() => copy(c.code)}>{copied === c.code ? 'Copié ✓' : 'Copier'}</button>
                   </td>
-                  <td><span className="table-badge">{tierInfo(c.tier as any).label}</span></td>
+                  <td><span className="table-badge">{tierInfo((['T1', 'T2', 'T3', 'T4'] as const).includes(c.tier as 'T1' | 'T2' | 'T3' | 'T4') ? (c.tier as 'T1' | 'T2' | 'T3' | 'T4') : undefined).label}</span></td>
                   <td><span className={`status-badge ${c.status === 'USED' ? 'active' : c.status === 'REVOKED' ? 'bloque' : ''}`}>{c.status === 'USED' ? 'Utilisé' : c.status === 'REVOKED' ? 'Révoqué' : 'Disponible'}</span></td>
                   <td>{safeStr(c.note) || '—'}</td>
                   <td>{c.organization ? <strong>{safeStr(c.organization.name)}</strong> : <span className="muted">—</span>}</td>

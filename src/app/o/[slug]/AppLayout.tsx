@@ -98,7 +98,7 @@ export default function AppLayout({
   initialRoom?: string | null;
 }) {
   const [activePage, setActivePage] = useState(initialPage ?? 'Dashboard');
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => ((typeof window !== 'undefined' && (localStorage.getItem('mcf-theme') as any)) || 'light'));
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => ((typeof window !== 'undefined' && (localStorage.getItem('mcf-theme') === 'dark' ? 'dark' : 'light'))));
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [branding, setBranding] = useState<{ name?: string | null; logoUrl?: string | null }>({});
@@ -318,7 +318,7 @@ function renderContent(
     case 'Tâches':
       return <TasksPanel admin={ctx.orgRole === 'ORGANIZATION_ADMIN'} currentUserId={ctx.user.id} />;
     case 'Calendrier':
-      return <CalendarPanel user={user as any} orgRole={ctx.orgRole} />;
+      return <CalendarPanel user={user} orgRole={ctx.orgRole} />;
     case 'Visioconférence':
       return (
         <MeetingRoomsPanel
@@ -345,7 +345,7 @@ function renderContent(
     case 'Activités':
       return <ActivitiesPanel currentUserId={ctx.user.id} />;
     case 'Journal de travail':
-      return <WorkJournalPanel user={user as any} onNavigate={setPage} orgRole={ctx.orgRole} />;
+      return <WorkJournalPanel user={user} onNavigate={setPage} orgRole={ctx.orgRole} />;
     case 'Historique':
       return <HistoryPanel />;
     case 'Notifications':

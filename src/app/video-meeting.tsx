@@ -84,6 +84,21 @@ export default function VideoMeeting({
   const [audioMuted, setAudioMuted] = useState(startAudioMuted);
   const [videoMuted, setVideoMuted] = useState(startVideoMuted);
   const [copied, setCopied] = useState(false);
+  const [diagnostic, setDiagnostic] = useState('');
+
+  /** Petites vérifications locales affichées avec l'erreur (bloqueur, HTTPS, …). */
+  const buildDiagnostic = useCallback(() => {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return '';
+    const hints: string[] = [];
+    if (!navigator.onLine) hints.push('vous semblez hors-ligne');
+    if (typeof window.JitsiMeetExternalAPI !== 'function') {
+      hints.push(`API Jitsi absente sur ${targetDomain} (script bloqué par un bloqueur de pub, un pare-feu ou la CSP)`);
+    }
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      hints.push('page servie en HTTP : caméra/micro et Jitsi exigent HTTPS');
+    }
+    return hints.length > 0 ? `Pistes : ${hints.join(' · ')}.` : '';
+  }, [targetDomain]);
 
   const targetDomain = domain ?? jitsiDomain();
   const roomUrl = jitsiRoomUrl(roomName, targetDomain);
@@ -107,9 +122,16 @@ export default function VideoMeeting({
       return;
     }
 
+    if (!isJitsiRoomName(roomName)) {
+      setStatus('error');
+      setError(`Identifiant de salle invalide (« ${roomName} »). Rouvrez la salle depuis l’onglet Visioconférence pour obtenir un identifiant valide.`);
+      setDiagnostic('');
+      return;
+    }
     startingRef.current = true;
     setStatus('loading');
     setError('');
+    setDiagnostic('');
 
     try {
       await loadJitsiApi(targetDomain);

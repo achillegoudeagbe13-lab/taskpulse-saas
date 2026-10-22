@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAuth, requireOrgMember } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 
@@ -13,8 +14,21 @@ export async function GET() {
 export async function POST(request: Request) {
   const auth = await requireOrgMember();
   if (auth.error) return auth.error;
-  const { action, latitude, longitude, userAgent } = await request.json();
-  const open = await prisma.attendance.findFirst({ where: { userId: auth.ctx.user.id, clockIn: { gte: dayStart() }, clockOut: null }, orderBy: { clockIn: 'desc' } });
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Corps de requête JSON invalide.' }, { status: 400 });
+  }
+  const parsed = z.object({
+    action: z.enum(['ARRIVEE', 'DEPART']),
+    latitude: z.coerce.number().min(-90).max(90).optional(),
+    longitude: z.coerce.number().min(-180).max(180).optional(),
+    userAgent: z.string().max(300).optional(),
+  }).safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Action de pointage inconnue.' }, { status: 400 });
+  const { action, latitude, longitude, userAgent } = parsed.data;
+  const open = await prisma.attendance.findFirst({ where: { userId: auth.ctx.user.id, organizationId: auth.ctx.organizationId, clockIn: { gte: dayStart() }, clockOut: null }, orderBy: { clockIn: 'desc' } });
 
   // ---- Contrôle GPS optionnel (admin-configurable) ----
   const orgSettings = await prisma.systemSetting.findMany({ where: { organizationId: auth.ctx.organizationId, key: { in: ['geoEnabled', 'geoLat', 'geoLng', 'geoRadiusMeters'] } } });
@@ -40,12 +54,12 @@ export async function POST(request: Request) {
 
   if (action === 'ARRIVEE') {
     if (open) return NextResponse.json({ error: 'Vous avez déjà pointé votre arrivée.' }, { status: 409 });
-    const record = await prisma.attendance.create({ data: { ...recordData, clockIn: new Date() } as any });
+    const record = await prisma.attendance.create({ data: { userId: recordData.userId, organizationId: recordData.organizationId, clockIn: new Date(), latitude: latitude ?? null, longitude: longitude ?? null, userAgent: userAgent ?? null } });
     return NextResponse.json({ record }, { status: 201 });
   }
   if (action === 'DEPART') {
     if (!open) return NextResponse.json({ error: 'Pointez votre arrivée avant votre départ.' }, { status: 409 });
-    const record = await prisma.attendance.update({ where: { id: open.id }, data: { clockOut: new Date(), latitude: latitude ?? undefined, longitude: longitude ?? undefined } as any });
+    const record = await prisma.attendance.update({ where: { id: open.id }, data: { clockOut: new Date(), latitude: latitude ?? undefined, longitude: longitude ?? undefined } });
     return NextResponse.json({ record });
   }
   return NextResponse.json({ error: 'Action de pointage inconnue.' }, { status: 400 });

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { LeaveStatus } from '@prisma/client';
 import { requireOrgMember, requireOrgAdmin } from '../../../../../lib/auth';
 import { prisma } from '../../../../../lib/prisma';
 
@@ -15,7 +16,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (!leave) return NextResponse.json({ error: 'Demande introuvable.' }, { status: 404 });
     const updated = await prisma.leaveRequest.update({
       where: { id: leave.id },
-      data: { status: ALLOWED[status] as any, decidedById: auth.ctx.user.id, decidedAt: new Date() },
+      data: { status: ALLOWED[status] as LeaveStatus, decidedById: auth.ctx.user.id, decidedAt: new Date() },
     });
     // Notifie le demandeur du résultat.
     await prisma.notification.create({

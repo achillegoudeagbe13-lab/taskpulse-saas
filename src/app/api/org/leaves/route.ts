@@ -42,12 +42,14 @@ export async function POST(request: Request) {
     const start = new Date(input.startDate);
     const end = new Date(input.endDate);
     if (end < start) return NextResponse.json({ error: 'La date de fin est antérieure à la date de début.' }, { status: 400 });
-    if (start > end) return NextResponse.json({ error: 'Dates invalides.' }, { status: 400 });
 
     // Garde-fou : pas de doublon sur une période déjà couverte par une demande en cours (envoyée ou approuvée).
+    // La recherche est limitée à l'organisation active pour ne jamais bloquer
+    // à cause d'une demande homonyme d'une autre organisation.
     const overlap = await prisma.leaveRequest.findFirst({
       where: {
         userId: auth.ctx.user.id,
+        organizationId: auth.ctx.organizationId,
         status: { in: ['PENDING', 'APPROVED'] },
         startDate: { lte: end },
         endDate: { gte: start },

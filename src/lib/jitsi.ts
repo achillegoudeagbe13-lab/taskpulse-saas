@@ -91,9 +91,18 @@ export function loadJitsiApi(domain: string = jitsiDomain()): Promise<void> {
 
     const onLoad = () => {
       if (typeof window.JitsiMeetExternalAPI === 'function') resolve();
-      else reject(new Error('Le script Jitsi Meet n’a pas exposé son API.'));
+      else {
+        // meet.jit.si renvoie parfois une page HTML (bloqueur/pub) sans l'API :
+        // on retire la balise pour permettre un vrai nouvel essai.
+        document.querySelector<HTMLScriptElement>(selector)?.remove();
+        reject(new Error(`Le script Jitsi chargé depuis ${domain} n’a pas exposé son API (réponse invalide ou bloquée).`));
+      }
     };
-    const onError = () => reject(new Error(`Impossible de charger l’API Jitsi depuis ${domain}.`));
+    // Domaine injoignable, HTTPS bloqué ou CSP : on retire la balise en échec.
+    const onError = () => {
+      document.querySelector<HTMLScriptElement>(selector)?.remove();
+      reject(new Error(`Impossible de charger l’API Jitsi depuis ${domain} (réseau bloqué, domaine injoignable ou CSP).`));
+    };
 
     if (existing) {
       existing.addEventListener('load', onLoad, { once: true });

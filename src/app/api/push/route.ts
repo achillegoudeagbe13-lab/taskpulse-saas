@@ -29,6 +29,12 @@ export async function POST(request: Request) {
   if (!vapidPublicKey()) return NextResponse.json({ error: 'Push non configuré sur le serveur.' }, { status: 503 });
   try {
     const input = subscribeSchema.parse(await request.json());
+    // Un endpoint est unique au monde : s'il appartient à un autre compte
+    // (ex. session partagée), on refuse plutôt que de détourner ses notifications.
+    const existing = await prisma.pushSubscription.findUnique({ where: { endpoint: input.endpoint }, select: { userId: true } });
+    if (existing && existing.userId !== auth.ctx.user.id) {
+      return NextResponse.json({ error: 'Cet appareil est déjà enregistré sur un autre compte.' }, { status: 409 });
+    }
     await prisma.pushSubscription.upsert({
       where: { endpoint: input.endpoint },
       create: {

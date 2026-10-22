@@ -1,7 +1,9 @@
-// cleanup2.cjs
+// cleanup2.cjs — supprime les helpers temporaires à la racine du projet.
 const fs = require('fs');
 const path = require('path');
-const h = 'C:/Users/ADM/Desktop/taskpilse2';
+// Racine réelle du projet (fonctionne quel que soit le dossier d'installation,
+// y compris « mar-ci center\taskpilse2 » — plus de chemin absolu codé en dur).
+const h = __dirname;
 const files = [
   'cleanup.cjs', 'do-cleanup.bat', 'verify.bat', 'tsc-check.cjs',
   'tsc-check.bat', 'tsc-result.txt',

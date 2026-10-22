@@ -16,10 +16,11 @@ export default function RegisterOrgPage() {
 
   const handleOrgSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const d = Object.fromEntries(new FormData(e.currentTarget)) as any;
+    const form = new FormData(e.currentTarget);
+    const text = (name: string) => String(form.get(name) ?? '').trim();
     setOrgData({
-      name: d.name, sector: d.sector, country: d.country,
-      contactEmail: d.contactEmail, phone: d.phone || '',
+      name: text('name'), sector: text('sector'), country: text('country'),
+      contactEmail: text('contactEmail'), phone: text('phone'),
     });
     setStep(2);
   };
@@ -28,15 +29,16 @@ export default function RegisterOrgPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const d = Object.fromEntries(new FormData(e.currentTarget)) as any;
+    const form = new FormData(e.currentTarget);
+    const text = (name: string) => String(form.get(name) ?? '').trim();
     const res = await fetch('/api/org/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         organization: orgData,
         responsible: {
-          firstName: d.firstName, lastName: d.lastName,
-          username: d.username, email: d.email, password: d.password,
+          firstName: text('firstName'), lastName: text('lastName'),
+          username: text('username'), email: text('email'), password: String(form.get('password') ?? ''),
         },
       }),
     });

@@ -16,7 +16,8 @@ services:
     region: frankfurt
     buildCommand: npm install && npm run build
     startCommand: npm run start
-    preDeployCommand: npx prisma db push --skip-generate
+    # Production : migration sidérale (pas de db push en production).
+    preDeployCommand: npx prisma migrate deploy --skip-seed
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
@@ -28,6 +29,8 @@ services:
       - key: TASKPULSE_ADMIN_EMAIL
         sync: false
       - key: AUTH_SECRET
-        sync: false
+        # Généré automatiquement à chaque déploiement pour ne jamais exposer une
+        # valeur en clair dans le dépôt.
+        generate: random
       - key: GEMINI_API_KEY
         sync: false

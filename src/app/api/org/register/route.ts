@@ -97,7 +97,11 @@ export async function POST(request: Request) {
       where: { id: result.user.id },
       include: { department: true, profile: true, memberships: { include: { organization: true }, orderBy: { createdAt: 'asc' } } },
     });
-    return NextResponse.json({ organization: { id: result.organization.id, name: result.organization.name, slug: result.organization.slug }, user: publicUser(full!) }, { status: 201 });
+    if (!full) {
+      await writeAudit(result.user.id, 'ERREUR_CREATION_ORGANISATION', 'Organization', result.organization.id);
+      return NextResponse.json({ error: 'Organisation créée, mais la session automatique a échoué. Veuillez vous connecter.' }, { status: 201 });
+    }
+    return NextResponse.json({ organization: { id: result.organization.id, name: result.organization.name, slug: result.organization.slug }, user: publicUser(full) }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: error.issues[0]?.message ?? 'Données invalides.' }, { status: 400 });
     return NextResponse.json({ error: 'Impossible de créer cette organisation.' }, { status: 400 });

@@ -63,7 +63,10 @@ export function priceOf(tier: PlanTier | null | undefined): number {
 }
 
 export function formatPrice(price: number): string {
-  return `${price.toLocaleString('fr-FR')} F`;
+  const value = Math.trunc(Number(price) || 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return `${value} F`;
 }
 
 export function tierLabel(tier: PlanTier | null | undefined): string {
