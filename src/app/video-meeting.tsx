@@ -87,6 +87,9 @@ export default function VideoMeeting({
   const [diagnostic, setDiagnostic] = useState('');
 
   /** Petites vérifications locales affichées avec l'erreur (bloqueur, HTTPS, …). */
+  const targetDomain = domain ?? jitsiDomain();
+  const roomUrl = jitsiRoomUrl(roomName, targetDomain);
+
   const buildDiagnostic = useCallback(() => {
     if (typeof window === 'undefined' || typeof navigator === 'undefined') return '';
     const hints: string[] = [];
@@ -99,9 +102,6 @@ export default function VideoMeeting({
     }
     return hints.length > 0 ? `Pistes : ${hints.join(' · ')}.` : '';
   }, [targetDomain]);
-
-  const targetDomain = domain ?? jitsiDomain();
-  const roomUrl = jitsiRoomUrl(roomName, targetDomain);
 
   /** Libère l'instance Jitsi et l'iframe (sans toucher au state React). */
   const disposeApi = useCallback(() => {
