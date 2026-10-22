@@ -39,8 +39,8 @@ import {
 
 type User = {
   id: string;
-  firstName: string | null;
-  lastName: string | null;
+  firstName: string;
+  lastName: string;
   email: string;
   role: string | null;
   status: string;
