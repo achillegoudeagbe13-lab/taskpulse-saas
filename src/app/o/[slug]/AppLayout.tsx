@@ -42,7 +42,7 @@ type User = {
   firstName: string;
   lastName: string;
   email: string;
-  role: string | null;
+  role: string;
   status: string;
   department: { id: string; name: string } | null;
   profile: { id: string; position?: string | null; bio?: string | null } | null;
