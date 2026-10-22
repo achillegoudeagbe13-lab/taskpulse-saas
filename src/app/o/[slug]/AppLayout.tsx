@@ -98,7 +98,11 @@ export default function AppLayout({
   initialRoom?: string | null;
 }) {
   const [activePage, setActivePage] = useState(initialPage ?? 'Dashboard');
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => ((typeof window !== 'undefined' && (localStorage.getItem('mcf-theme') === 'dark' ? 'dark' : 'light'))));
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light';
+    const storedTheme = localStorage.getItem('mcf-theme');
+    return storedTheme === 'dark' ? 'dark' : 'light';
+  });
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [branding, setBranding] = useState<{ name?: string | null; logoUrl?: string | null }>({});
