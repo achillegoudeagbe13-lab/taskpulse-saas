@@ -99,9 +99,11 @@ export default function AppLayout({
 }) {
   const [activePage, setActivePage] = useState(initialPage ?? 'Dashboard');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'light';
-    const storedTheme = localStorage.getItem('mcf-theme');
-    return storedTheme === 'dark' ? 'dark' : 'light';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('mcf-theme');
+      return saved === 'dark' ? 'dark' : 'light';
+    }
+    return 'light';
   });
 
   const [drawerOpen, setDrawerOpen] = useState(false);

@@ -3,8 +3,8 @@
 # Renseignez ensuite les variables marquées `sync: false` dans le dashboard Render.
 
 databases:
-  - name: taskpulse-db
-    databaseName: taskpulse
+  - name: mar-ci-flow-db
+    databaseName: mar-ci-flow
     user: taskpulse
     plan: free
 
@@ -16,13 +16,13 @@ services:
     region: frankfurt
     buildCommand: npm run build
     startCommand: npm run start
-    # Production : migration sidérale (pas de db push en production).
-    preDeployCommand: npx prisma migrate deploy --skip-seed
+    # Base neuve : on pousse le schéma puis on seed (pas de migrations existantes).
+    preDeployCommand: npx prisma db push && npx prisma db seed
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: taskpulse-db
+          name: mar-ci-flow-db
           property: connectionString
       - key: NODE_VERSION
         value: "20"
