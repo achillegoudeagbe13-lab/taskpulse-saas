@@ -44,7 +44,7 @@ type User = {
   email: string;
   role: string;
   status: string;
-  department: { id: string; name: string } | null;
+  department: string;
   profile: { id: string; position?: string | null; bio?: string | null } | null;
   photoUrl?: string | null;
   createdAt: string;
