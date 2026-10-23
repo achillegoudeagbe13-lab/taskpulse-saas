@@ -81,11 +81,13 @@ async function main() {
     });
   }
 
+  const adminEmail = (process.env.TASKPULSE_ADMIN_EMAIL ?? '').trim().toLowerCase() || 'admin@taskpulse.fr';
+  const adminUsername = adminEmail.split('@')[0] || 'admin';
   const passwordHash = await bcrypt.hash(process.env.ADMIN_INITIAL_PASSWORD ?? 'Admin123!', 12);
   const admin = await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: { passwordHash },
-    create: { firstName: 'Amélie', lastName: 'Martin', username: 'admin', email: 'admin@taskpulse.fr', passwordHash },
+    where: { username: adminUsername },
+    update: { passwordHash, email: adminEmail },
+    create: { firstName: 'Amélie', lastName: 'Martin', username: adminUsername, email: adminEmail, passwordHash },
   });
   const adminMembership = await prisma.membership.findFirst({ where: { userId: admin.id, organizationId: organization.id } });
   if (!adminMembership) {
